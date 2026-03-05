@@ -19,6 +19,7 @@ namespace Basketaki.Data
         public DbSet<PlayerSeasonTeam> PlayerSeasonTeams { get; set; }
         public DbSet<Match> Matches { get; set; }
         public DbSet<PlayerStat> PlayerStats { get; set; }
+        public DbSet<Court> Courts { get; set; }
 
 
 
@@ -79,6 +80,11 @@ namespace Basketaki.Data
 
             modelBuilder.Entity<PlayerSeasonTeam>()
                 .HasIndex(pst => new { pst.PlayerId, pst.SeasonId }).IsUnique();
+
+
+            modelBuilder.Entity<Match>()
+                .HasIndex(m => new { m.CourtId, m.MatchDate })
+                .IsUnique();
 
         }
 

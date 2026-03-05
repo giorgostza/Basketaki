@@ -25,9 +25,13 @@ namespace Basketaki.Services
             var season = await _context.Seasons.FindAsync(id);
 
             if (season == null)
+            {
                 return false;
+            }
+               
 
             _context.Seasons.Remove(season);
+
             return await _context.SaveChangesAsync() > 0;
         }
 
