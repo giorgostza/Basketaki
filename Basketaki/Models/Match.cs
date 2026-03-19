@@ -6,7 +6,16 @@ namespace Basketaki.Models
     {
         public int Id { get; set; }
 
+
+        [Required]
         public DateTime MatchDate { get; set; }  // 10/1/2026 
+
+        [Required]
+        public TimeOnly StartTime { get; set; }   // 18:00
+
+        [Required]
+        public TimeOnly EndTime { get; set; }     // 19:30
+
 
         public int CourtId { get; set; }
         public Court Court { get; set; } = null!;  // Basketaki Arena
@@ -25,6 +34,8 @@ namespace Basketaki.Models
 
         [Range(0, 300)]
         public int AwayScore { get; set; }   // 59-65
+
+        public bool IsPlayed { get; set; }
 
         public ICollection<PlayerStat> PlayerStats { get; set; } = new List<PlayerStat>();
 

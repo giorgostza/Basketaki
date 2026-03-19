@@ -13,9 +13,39 @@ namespace Basketaki.Services
             _context = context;
         }
 
+
+        public async Task<List<Season>> GetAllAsync()
+        {
+
+            return await _context.Seasons.OrderByDescending(s => s.StartDate).ToListAsync();
+
+        }
+
         public async Task<bool> CreateAsync(Season season)
         {
+
+            if (await NameExistsAsync(season.Name))
+            {
+
+                return false;
+
+            }
+
+
+            if (season.StartDate >= season.EndDate)
+            {
+                return false;
+            }
+               
+
             _context.Seasons.Add(season);
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> UpdateAsync(Season season)
+        {
+            _context.Seasons.Update(season);
 
             return await _context.SaveChangesAsync() > 0;
         }
@@ -28,26 +58,29 @@ namespace Basketaki.Services
             {
                 return false;
             }
-               
+
+
+            if (await _context.Leagues.AnyAsync(l => l.SeasonId == id))
+            {
+
+                return false;
+
+            }
+                
 
             _context.Seasons.Remove(season);
 
             return await _context.SaveChangesAsync() > 0;
         }
 
+
+
+
         public async Task<bool> ExistsAsync(int id)
         {
             return await _context.Seasons.AnyAsync(s => s.Id == id);
         }
         
-
-        public async Task<List<Season>> GetAllAsync()
-        {
-
-            return await _context.Seasons.OrderByDescending(s => s.StartDate).ToListAsync();
-
-        }
-
         public async Task<Season?> GetByIdAsync(int id)
         {
 
@@ -60,11 +93,6 @@ namespace Basketaki.Services
             return await _context.Seasons.AnyAsync(s => s.Name == name);
         }
 
-        public async Task<bool> UpdateAsync(Season season)
-        {
-            _context.Seasons.Update(season);
-
-            return await _context.SaveChangesAsync() > 0;
-        }
+        
     }
 }
