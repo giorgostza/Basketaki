@@ -10,48 +10,77 @@ namespace Basketaki.Services
 
         public MatchService(ApplicationDbContext context)
         {
+
             _context = context;
+
         }
 
-        public async Task<List<Match>> GetAllAsync()
-        {
-            return await _context.Matches                  // Eagerly load related entities to avoid N+1 query issues
-                .Include(m => m.Court)                     // Load the Court where the Match is played
-                .Include(m => m.League)                    // Load the League to which the Match belongs
-                .Include(m => m.HomeTeamSeasonLeague)      // Load the HomeTeam Season League details
-                        .ThenInclude(tsl => tsl.Team)      // Load the HomeTeam details
-                .Include(m => m.AwayTeamSeasonLeague)      // Load the AwayTeam Season League details
-                        .ThenInclude(tsl => tsl.Team)      // Load the AwayTeam details
-                .ToListAsync();                            // Execute the query and return the list of Matches with all related data
+        public async Task<List<Match>> GetAllAsync() // Retrieve all Matches, including related entities such as Court, League, Home and Away teams.
+        {                                            // PlayerStats and Photos are not included in this method for performance reasons.
+
+            return await _context.Matches
+                .Include(m => m.Court)
+                .Include(m => m.League)
+                .Include(m => m.HomeTeamSeasonLeague)
+                        .ThenInclude(tsl => tsl.Team)
+                .Include(m => m.AwayTeamSeasonLeague)
+                        .ThenInclude(tsl => tsl.Team)
+                .ToListAsync(); 
+
         }
 
-        public async Task<Match?> GetByIdAsync(int id)
-        {
-            return await _context.Matches               // Eagerly load related entities to avoid N+1 query issues
-                .Include(m => m.Court)                  // Load the Court where the Match is played
-                .Include(m => m.League)                 // Load the League to which the Match belongs
-                .Include(m => m.HomeTeamSeasonLeague)   // Load the HomeTeam Season League details
-                       .ThenInclude(tsl => tsl.Team)    // Load the HomeTeam details
-                .Include(m => m.AwayTeamSeasonLeague)   // Load the AwayTeam Season League details
-                       .ThenInclude(tsl => tsl.Team)    // Load the AwayTeam details
-                .Include(m => m.PlayerStats)            // Load the PlayerStats for the Match
-                .Include(m => m.Photos)                 // Load the Match Photos
-                .FirstOrDefaultAsync(m => m.Id == id);  // Execute the query and return the Match with all related data, or null if not found
+        public async Task<Match?> GetByIdAsync(int id) // Retrieve a Match by its ID, including related entities such as Court, League, Home and Away teams, PlayerStats and Photos.
+        {                                              // Returns null if not found.
+
+            return await _context.Matches
+                .Include(m => m.Court)
+                .Include(m => m.League)
+                .Include(m => m.HomeTeamSeasonLeague)
+                        .ThenInclude(tsl => tsl.Team)
+                .Include(m => m.AwayTeamSeasonLeague)
+                        .ThenInclude(tsl => tsl.Team)
+                .Include(m => m.PlayerStats)
+                .Include(m => m.Photos)
+                .FirstOrDefaultAsync(m => m.Id == id); 
+
         }
 
         public async Task<bool> CreateAsync(Match match)
         {
-
-            if (match.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId)  // Ensure that the Home and Away teams are not the same
+            
+            if (match.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId) // check if Home and Away teams are the same
             {
 
                 return false;
 
             }
-                
 
             
-            if (match.StartTime >= match.EndTime)  // Ensure that the StartTime is before the EndTime
+            if (match.StartTime >= match.EndTime) // check if StartTime is before EndTime
+            {
+
+                return false;
+
+            }
+
+            
+            var courtExists = await _context.Courts.AnyAsync(c => c.Id == match.CourtId);
+            var leagueExists = await _context.Leagues.AnyAsync(l => l.Id == match.LeagueId);
+            var homeTeamExists = await _context.TeamSeasonLeagues.AnyAsync(t => t.Id == match.HomeTeamSeasonLeagueId);
+            var awayTeamExists = await _context.TeamSeasonLeagues.AnyAsync(t => t.Id == match.AwayTeamSeasonLeagueId);
+
+            if (!courtExists || !leagueExists || !homeTeamExists || !awayTeamExists)  // check if Court, League, HomeTeam and AwayTeam exist
+            {
+
+                return false;
+
+            }
+
+            
+            var courtConflict = await _context.Matches.AnyAsync(m => m.CourtId == match.CourtId && m.MatchDate == match.MatchDate && m.StartTime == match.StartTime );
+            // check if there's a Match at the same Court, Date and Time
+
+            if (courtConflict)
             {
 
                 return false;
@@ -59,53 +88,49 @@ namespace Basketaki.Services
             }
 
 
-            if (!await _context.Courts.AnyAsync(c => c.Id == match.CourtId))  // Ensure that the specified Court exists
+
+            
+            var teamConflict = await _context.Matches.AnyAsync(m => m.MatchDate == match.MatchDate && m.StartTime == match.StartTime &&
+                                                                    (m.HomeTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
+                                                                         m.AwayTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
+                                                                         m.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId ||
+                                                                         m.AwayTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId)
+                                                               );
+            // check if either Home or Away team has another Match at the same Date and Time
+
+
+            if (teamConflict)
             {
 
                 return false;
 
             }
 
-
-            if (!await _context.Leagues.AnyAsync(l => l.Id == match.LeagueId))  // Ensure that the specified League exists
-            {
-
-                return false;
-
-            }
-
-
-            // Check for scheduling conflicts on the same Court at the same Date and Time
-            var conflict = await _context.Matches.AnyAsync(m => (m.CourtId == match.CourtId) && (m.MatchDate == match.MatchDate) && (m.StartTime == match.StartTime));  
-
-            if (conflict)
-            {
-
-                return false;
-
-            }
-
+            
             _context.Matches.Add(match);
             return await _context.SaveChangesAsync() > 0;
         }
 
         public async Task<bool> UpdateAsync(Match match)
         {
-            if (!await ExistsAsync(match.Id))  // Ensure that the Match exists before trying to update it
+            
+            if (!await ExistsAsync(match.Id)) // check if Match exists
             {
 
                 return false;
 
             }
 
-            if (match.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId)  // Ensure that the Home and Away Teams are not the same
+            
+            if (match.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId) // check if Home and Away teams are the same
             {
 
                 return false;
 
             }
 
-            if (match.StartTime >= match.EndTime)  // Ensure that the StartTime is before the EndTime
+            
+            if (match.StartTime >= match.EndTime)  // check if StartTime is before EndTime
             {
 
                 return false;
@@ -113,10 +138,27 @@ namespace Basketaki.Services
             }
 
 
-            // Check for scheduling conflicts on the same Court at the same Date and Time
-            var conflict = await _context.Matches.AnyAsync(m => (m.Id != match.Id) && (m.CourtId == match.CourtId) && (m.MatchDate == match.MatchDate) && (m.StartTime == match.StartTime));  
+           
+            var courtConflict = await _context.Matches.AnyAsync(m => m.Id != match.Id && m.CourtId == match.CourtId && m.MatchDate == match.MatchDate && m.StartTime == match.StartTime);
+            // check if there's another Match at the same Court, Date and Time (excluding the current Match)
 
-            if (conflict)
+            if (courtConflict)
+            {
+
+                return false;
+
+            }
+
+           
+            var teamConflict = await _context.Matches.AnyAsync(m => m.Id != match.Id && m.MatchDate == match.MatchDate && m.StartTime == match.StartTime &&
+                                                                   (m.HomeTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
+                                                                    m.AwayTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
+                                                                    m.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId ||
+                                                                    m.AwayTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId)
+                                                               );
+            // check if either Home or Away team has another Match at the same Date and Time (excluding the current Match)
+
+            if (teamConflict)
             {
 
                 return false;
@@ -129,7 +171,7 @@ namespace Basketaki.Services
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var match = await _context.Matches.FindAsync(id);  // Find the Match by its Id
+            var match = await _context.Matches.FindAsync(id); // check if Match exists
 
             if (match == null)
             {
@@ -144,7 +186,10 @@ namespace Basketaki.Services
 
         public async Task<bool> ExistsAsync(int id)
         {
-            return await _context.Matches.AnyAsync(m => m.Id == id);  // Check if any Match exists with the specified Id
+
+            return await _context.Matches.AnyAsync(m => m.Id == id);  // Check if a Match with the specified ID exists in the database
+
         }
+
     }
 }

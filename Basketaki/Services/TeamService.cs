@@ -10,23 +10,25 @@ namespace Basketaki.Services
 
         public TeamService(ApplicationDbContext context)
         {
+
             _context = context;
+
         }
 
         public async Task<List<Team>> GetAllAsync()
         {
             return await _context.Teams
-                .Include(t => t.TeamSeasonLeagues)  // Show which Leagues the Team participates
-                .Include(t => t.PlayerSeasonTeams)  // Show Players by Season
-                .ToListAsync();  
+                        .Include(t => t.TeamSeasonLeagues)  // Show which Leagues the Team participates
+                        .Include(t => t.PlayerSeasonTeams)  // Show Players by Season
+                        .ToListAsync();  
         }
 
         public async Task<Team?> GetByIdAsync(int id)   
         {
             return await _context.Teams
-                .Include(t => t.TeamSeasonLeagues)      // Show which Leagues the Team participates
-                .Include(t => t.PlayerSeasonTeams)      // Show Players by Season
-                .FirstOrDefaultAsync(t => t.Id == id);
+                        .Include(t => t.TeamSeasonLeagues)      // Show which Leagues the Team participates
+                        .Include(t => t.PlayerSeasonTeams)      // Show Players by Season
+                        .FirstOrDefaultAsync(t => t.Id == id);
         }
 
         public async Task<bool> CreateAsync(Team team)
@@ -50,8 +52,10 @@ namespace Basketaki.Services
             var exists = await _context.Teams.AnyAsync(t => t.Name == team.Name && t.Id != team.Id);
 
             if (exists)                  // Check if the Name is UNIQUE before updating the Team
-            {
+            { 
+
                 return false;
+
             }
                 
 
@@ -65,19 +69,25 @@ namespace Basketaki.Services
 
             if (team == null)                                     
             {
+
                 return false;
+
             }
 
             
             if (await _context.TeamSeasonLeagues.AnyAsync(tsl => tsl.TeamId == id))  // Check if the Team is assigned to any League before DELETE
             {
-                return false;                                                           
+
+                return false;    
+                
             }
 
 
             if (await _context.PlayerSeasonTeams.AnyAsync(pst => pst.TeamId == id))  // Check if the Team has Players assigned before DELETE
             {
-                return false;                                                           
+
+                return false;  
+                
             }
                 
 
@@ -87,12 +97,16 @@ namespace Basketaki.Services
 
         public async Task<bool> ExistsAsync(int id) 
         {
-            return await _context.Teams.AnyAsync(t => t.Id == id);
+
+            return await _context.Teams.AnyAsync(t => t.Id == id); // Check if a Team with the specified ID exists in the database
+
         }
 
         public async Task<bool> NameExistsAsync(string name)    
         {
-            return await _context.Teams.AnyAsync(t => t.Name == name);
+
+            return await _context.Teams.AnyAsync(t => t.Name == name); // Check if a Team with the specified Name already exists in the database
+
         }
     }
 }
