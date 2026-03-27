@@ -8,9 +8,9 @@ namespace Basketaki.Services
 
         Task<MatchPhoto?> GetByIdAsync(int id);
 
-        Task<bool> CreateAsync(MatchPhoto photo);
+        Task<SimpleResult> CreateAsync(MatchPhoto photo);
 
-        Task<bool> DeleteAsync(int id);
+        Task<SimpleResult> DeleteAsync(int id);
 
         Task<bool> ExistsAsync(int id);
     }
