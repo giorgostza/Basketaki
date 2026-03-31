@@ -8,12 +8,12 @@ namespace Basketaki.Services
 
         Task<Referee?> GetByIdAsync(int id);
 
-        Task<bool> CreateAsync(Referee referee);
+        Task<SimpleResult> CreateAsync(Referee referee);
 
-        Task<bool> UpdateAsync(Referee referee);
+        Task<SimpleResult> UpdateAsync(Referee referee);
 
-        Task<bool> DeleteAsync(int id);
+        Task<SimpleResult> DeleteAsync(int id);
 
-        Task<bool> ExistsAsync(int id);
+       
     }
 }

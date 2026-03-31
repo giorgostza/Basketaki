@@ -13,114 +13,100 @@ namespace Basketaki.Services
             _context = context;
         }
 
-        public async Task<List<TeamStanding>> GetAllAsync() // This method retrieves all team standings from the database
-        {                                                   // including related team and league information, and orders them by league points, wins, and losses.
+        // Read-only methods with AsNoTracking for performance
+        public async Task<List<TeamStanding>> GetAllAsync()
+        {
             return await _context.TeamStandings
+                .AsNoTracking()
                 .Include(ts => ts.TeamSeasonLeague)
                     .ThenInclude(tsl => tsl.Team)
                 .Include(ts => ts.TeamSeasonLeague)
                     .ThenInclude(tsl => tsl.League)
-                .OrderByDescending(ts => ts.LeaguePoints)     
+                .OrderByDescending(ts => ts.LeaguePoints)
                 .ThenByDescending(ts => ts.Wins)
                 .ThenBy(ts => ts.Losses)
                 .ToListAsync();
         }
 
-        public async Task<TeamStanding?> GetByIdAsync(int id) // This method retrieves a specific team standing by its ID, including related team and league information.
-        {                                                     // It returns null if the standing is not found.
-
+        public async Task<TeamStanding?> GetByIdAsync(int id)
+        {
             return await _context.TeamStandings
+                .AsNoTracking()
                 .Include(ts => ts.TeamSeasonLeague)
                     .ThenInclude(tsl => tsl.Team)
                 .Include(ts => ts.TeamSeasonLeague)
                     .ThenInclude(tsl => tsl.League)
                 .FirstOrDefaultAsync(ts => ts.Id == id);
-
         }
 
-        public async Task<TeamStanding?> GetByTeamSeasonLeagueIdAsync(int teamSeasonLeagueId) // This method retrieves a team standing based on the TeamSeasonLeagueId
-        {                                                                                     // including related team and league information
-                                                                                              // It returns null if not found.
+        public async Task<TeamStanding?> GetByTeamSeasonLeagueIdAsync(int teamSeasonLeagueId)
+        {
             return await _context.TeamStandings
+                .AsNoTracking()
                 .Include(ts => ts.TeamSeasonLeague)
                     .ThenInclude(tsl => tsl.Team)
                 .Include(ts => ts.TeamSeasonLeague)
                     .ThenInclude(tsl => tsl.League)
                 .FirstOrDefaultAsync(ts => ts.TeamSeasonLeagueId == teamSeasonLeagueId);
-
         }
 
-        public async Task<bool> CreateAsync(TeamStanding standing)
+        // Create a new TeamStanding
+        public async Task<SimpleResult> CreateAsync(TeamStanding standing)
         {
-            // Validate that the specified TeamSeasonLeagueId exists 
             if (!await _context.TeamSeasonLeagues.AnyAsync(tsl => tsl.Id == standing.TeamSeasonLeagueId))
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "TeamSeasonLeague does not exist." };
             }
 
-            // Ensure that there isn't already a standing for the same TeamSeasonLeagueId
             if (await _context.TeamStandings.AnyAsync(ts => ts.TeamSeasonLeagueId == standing.TeamSeasonLeagueId))
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Standing for this TeamSeasonLeague already exists." };
             }
 
-            // Validate that LeaguePoints, Wins, and Losses are not negative
             if (standing.LeaguePoints < 0 || standing.Wins < 0 || standing.Losses < 0)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "LeaguePoints, Wins, or Losses cannot be negative." };
             }
 
             _context.TeamStandings.Add(standing);
-            return await _context.SaveChangesAsync() > 0;
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> UpdateAsync(TeamStanding standing)
+        // Update an existing TeamStanding
+        public async Task<SimpleResult> UpdateAsync(TeamStanding standing)
         {
-            if (!await ExistsAsync(standing.Id)) // Validate that the standing exists before trying to update
+            var existing = await _context.TeamStandings.FirstOrDefaultAsync(ts => ts.Id == standing.Id);
+            if (existing == null)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "TeamStanding not found." };
             }
 
-            // Validate that the specified TeamSeasonLeagueId exists
             if (standing.LeaguePoints < 0 || standing.Wins < 0 || standing.Losses < 0)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "LeaguePoints, Wins, or Losses cannot be negative." };
             }
 
             _context.TeamStandings.Update(standing);
-            return await _context.SaveChangesAsync() > 0;
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        // Delete a TeamStanding
+        public async Task<SimpleResult> DeleteAsync(int id)
         {
             var standing = await _context.TeamStandings.FindAsync(id);
-
             if (standing == null)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "TeamStanding not found." };
             }
 
             _context.TeamStandings.Remove(standing);
-            return await _context.SaveChangesAsync() > 0;
-        }
+            await _context.SaveChangesAsync();
 
-        public async Task<bool> ExistsAsync(int id) // This method checks if a team standing with the specified ID exists 
-        {
-
-            return await _context.TeamStandings.AnyAsync(ts => ts.Id == id);
-
+            return new SimpleResult { Success = true };
         }
     }
 }

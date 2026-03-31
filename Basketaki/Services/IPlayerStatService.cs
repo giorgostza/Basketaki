@@ -10,11 +10,11 @@ namespace Basketaki.Services
 
         Task<List<PlayerStat>> GetByMatchIdAsync(int matchId);
 
-        Task<bool> CreateAsync(PlayerStat playerStat);
+        Task<SimpleResult> CreateAsync(PlayerStat playerStat);
 
-        Task<bool> UpdateAsync(PlayerStat playerStat);
+        Task<SimpleResult> UpdateAsync(PlayerStat playerStat);
 
-        Task<bool> DeleteAsync(int id);
+        Task<SimpleResult> DeleteAsync(int id);
 
         Task<bool> ExistsAsync(int id);
 

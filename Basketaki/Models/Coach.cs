@@ -2,9 +2,8 @@
 
 namespace Basketaki.Models
 {
-    public class Referee
+    public class Coach
     {
-
         public int Id { get; set; }
 
         [Required]
@@ -23,12 +22,9 @@ namespace Basketaki.Models
         [Range(150, 250)]
         public int Height { get; set; }
 
-
         [MaxLength(500)]
         public string? PhotoUrl { get; set; }
 
-        public ICollection<MatchReferee> MatchReferees { get; set; } = new List<MatchReferee>();
-
-
+       
     }
 }

@@ -16,8 +16,9 @@ namespace Basketaki.Models
         [MaxLength(150)]
         public string Location { get; set; } = null!;   // Menidi
 
-        [MaxLength(200)]
+        [MaxLength(300)]
         public string? Description { get; set; }    // Description of the Court for example if it is Indoor/Outdoor
+
 
         // Navigation property
         public ICollection<Match> Matches { get; set; } = new List<Match>();   // The games that take place in this Court

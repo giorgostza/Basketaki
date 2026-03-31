@@ -8,7 +8,7 @@ namespace Basketaki.Models
 
 
         [Required]
-        public DateTime MatchDate { get; set; }  // 10/1/2026 
+        public DateOnly MatchDate { get; set; }  // 10/1/2026 
 
         [Required]
         public TimeOnly StartTime { get; set; }   // 18:00
@@ -30,12 +30,14 @@ namespace Basketaki.Models
         public TeamSeasonLeague AwayTeamSeasonLeague { get; set; } = null!;   // Rejects
 
         [Range(0, 300)]
-        public int HomeScore { get; set; }   //  75-69
+        public int? HomeScore { get; set; }   //  75-69 
 
         [Range(0, 300)]
-        public int AwayScore { get; set; }   // 59-65
+        public int? AwayScore { get; set; }   // 59-65
 
-        public bool IsPlayed { get; set; }
+        public bool IsPlayed { get; set; } = false; 
+
+
 
         public ICollection<PlayerStat> PlayerStats { get; set; } = new List<PlayerStat>();
 

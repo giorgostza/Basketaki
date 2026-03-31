@@ -10,12 +10,12 @@ namespace Basketaki.Services
 
         Task<TeamStanding?> GetByTeamSeasonLeagueIdAsync(int teamSeasonLeagueId);
 
-        Task<bool> CreateAsync(TeamStanding standing);
+        Task<SimpleResult> CreateAsync(TeamStanding standing);
 
-        Task<bool> UpdateAsync(TeamStanding standing);
+        Task<SimpleResult> UpdateAsync(TeamStanding standing);
 
-        Task<bool> DeleteAsync(int id);
+        Task<SimpleResult> DeleteAsync(int id);
 
-        Task<bool> ExistsAsync(int id);
+        
     }
 }

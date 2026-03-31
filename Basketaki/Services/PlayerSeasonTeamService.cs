@@ -10,101 +10,88 @@ namespace Basketaki.Services
 
         public PlayerSeasonTeamService(ApplicationDbContext context)
         {
-
             _context = context;
-
         }
 
-        public async Task<List<PlayerSeasonTeam>> GetAllAsync() // Retrieves all PlayerSeasonTeam records, including related Player, Team, and Season data 
-        {                                                       // ordered by Season start date, Team name, and Player name
-
+        public async Task<List<PlayerSeasonTeam>> GetAllAsync()
+        {
             return await _context.PlayerSeasonTeams
+                .AsNoTracking()
                 .Include(pst => pst.Player)
                 .Include(pst => pst.Team)
                 .Include(pst => pst.Season)
-                        .OrderBy(pst => pst.Season.StartDate)
-                        .ThenBy(pst => pst.Team.Name)
-                        .ThenBy(pst => pst.Player.LastName)
-                        .ThenBy(pst => pst.Player.FirstName)
-                .ToListAsync(); 
-
+                .OrderBy(pst => pst.Season.StartDate)
+                .ThenBy(pst => pst.Team.Name)
+                .ThenBy(pst => pst.Player.LastName)
+                .ThenBy(pst => pst.Player.FirstName)
+                .ToListAsync();
         }
 
-        public async Task<PlayerSeasonTeam?> GetByIdAsync(int id) // Retrieves a PlayerSeasonTeam by its ID, including related Player, Team, and Season data
+        public async Task<PlayerSeasonTeam?> GetByIdAsync(int id)
         {
-
             return await _context.PlayerSeasonTeams
+                .AsNoTracking()
                 .Include(pst => pst.Player)
                 .Include(pst => pst.Team)
                 .Include(pst => pst.Season)
-                .FirstOrDefaultAsync(pst => pst.Id == id); // FindAsync doesn't support Include, so we use FirstOrDefaultAsync with a filter
-        
+                .FirstOrDefaultAsync(pst => pst.Id == id);
         }
 
-        public async Task<bool> CreateAsync(PlayerSeasonTeam model)
+        public async Task<SimpleResult> CreateAsync(PlayerSeasonTeam model)
         {
-            
             var playerExists = await _context.Players.AnyAsync(p => p.Id == model.PlayerId);
             var teamExists = await _context.Teams.AnyAsync(t => t.Id == model.TeamId);
             var seasonExists = await _context.Seasons.AnyAsync(s => s.Id == model.SeasonId);
 
-            if (!playerExists || !teamExists || !seasonExists) // check if related entities exist before creating the PlayerSeasonTeam
+            if (!playerExists || !teamExists || !seasonExists)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Invalid Player, Team or Season" };
             }
 
-            
-            if (await CombinationExistsAsync(model.PlayerId, model.SeasonId)) 
+            if (await CombinationExistsAsync(model.PlayerId, model.SeasonId))
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Player already assigned in this season" };
             }
 
             _context.PlayerSeasonTeams.Add(model);
-            return await _context.SaveChangesAsync() > 0;
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<SimpleResult> DeleteAsync(int id)
         {
-            var entity = await _context.PlayerSeasonTeams.FindAsync(id); // Find the PlayerSeasonTeam by ID 
-                                                                         //without Include since we only need to check for related PlayerStats
-            if (entity == null)
+            if (!await ExistsAsync(id))
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Record not found" };
             }
 
+            var hasStats = await _context.PlayerStats
+                .AnyAsync(ps => ps.PlayerSeasonTeamId == id);
 
-            // Check if there are any PlayerStats associated with this PlayerSeasonTeam before allowing deletion
-            if (await _context.PlayerStats.AnyAsync(ps => ps.PlayerSeasonTeamId == id)) 
+            if (hasStats)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Cannot delete record with stats" };
             }
 
-            _context.PlayerSeasonTeams.Remove(entity);
-            return await _context.SaveChangesAsync() > 0;
+            var entity = await _context.PlayerSeasonTeams.FindAsync(id);
+
+            _context.PlayerSeasonTeams.Remove(entity!);
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> ExistsAsync(int id)  // Check if a PlayerSeasonTeam with the specified ID exists in the database
+        public async Task<bool> ExistsAsync(int id)
         {
-
-            return await _context.PlayerSeasonTeams.AnyAsync(pst => pst.Id == id); 
-
+            return await _context.PlayerSeasonTeams
+                .AnyAsync(pst => pst.Id == id);
         }
 
         public async Task<bool> CombinationExistsAsync(int playerId, int seasonId)
         {
-
-            return await _context.PlayerSeasonTeams.AnyAsync(pst => pst.PlayerId == playerId && pst.SeasonId == seasonId);
-            // Check if a PlayerSeasonTeam with the same PlayerId and SeasonId already exists 
-            // preventing duplicate assignments of a Player to multiple Teams in the same Season
-
+            return await _context.PlayerSeasonTeams
+                .AnyAsync(pst => pst.PlayerId == playerId && pst.SeasonId == seasonId);
         }
     }
 }

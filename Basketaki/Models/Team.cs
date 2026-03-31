@@ -11,11 +11,13 @@ namespace Basketaki.Models
         [MaxLength(100)]
         public string Name { get; set; } = null!;  // Gran Camaria
 
-        [MaxLength(100)]
-        public string? CoachName { get; set; }   //  Athanasiou
-
+       
         [MaxLength(500)]
-        public string? LogoPhotoUrl { get; set; }
+        public string? PhotoUrl { get; set; }
+
+        public int? CoachId { get; set; }
+        public Coach? Coach { get; set; }
+
 
         // Navigation
         public ICollection<TeamSeasonLeague> TeamSeasonLeagues { get; set; } = new List<TeamSeasonLeague>();   // In wich Leagues participates

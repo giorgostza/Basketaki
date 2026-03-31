@@ -26,6 +26,8 @@ namespace Basketaki.Models
         [Range(0, int.MaxValue)]
         public int PointsAgainst { get; set; } // How many points conceded
 
+        public int PointDifference => PointsFor - PointsAgainst;
+
         [Range(0, int.MaxValue)]
         public int LeaguePoints { get; set; }  // How many league points (2 for win, 1 for loss , 0 for not shown up)
 

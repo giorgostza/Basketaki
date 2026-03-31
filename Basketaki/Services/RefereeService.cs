@@ -19,58 +19,80 @@ namespace Basketaki.Services
         {                                              // and order them by LastName and then by FirstName for better organization
 
             return await _context.Referees
-                .Include(r => r.MatchReferees)
-                .OrderBy(r => r.LastName)         
-                .ThenBy(r => r.FirstName)
-                .ToListAsync();
+                        .AsNoTracking()
+                        .Include(r => r.MatchReferees)
+                        .OrderBy(r => r.LastName)         
+                        .ThenBy(r => r.FirstName)
+                        .ToListAsync();
 
         }
 
         public async Task<Referee?> GetByIdAsync(int id)
         {
             // Retrieve a Referee by their ID, including their associated MatchReferees for comprehensive data retrieval
-            return await _context.Referees.Include(r => r.MatchReferees).FirstOrDefaultAsync(r => r.Id == id); 
+            return await _context.Referees.AsNoTracking().Include(r => r.MatchReferees).FirstOrDefaultAsync(r => r.Id == id); 
 
         }
 
-        public async Task<bool> CreateAsync(Referee referee)
+        public async Task<SimpleResult> CreateAsync(Referee referee)
         {
+            var firstName = referee.FirstName?.Trim().ToLower() ?? "";
+            var lastName = referee.LastName?.Trim().ToLower() ?? "";
+
             // Validate that the FirstName and LastName properties are not null empty or whitespace 
-            if (string.IsNullOrWhiteSpace(referee.FirstName) || string.IsNullOrWhiteSpace(referee.LastName))
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "FirstName and LastName are required" };
 
             }
+
+            referee.FirstName = firstName;
+            referee.LastName = lastName;
 
             _context.Referees.Add(referee);
-            return await _context.SaveChangesAsync() > 0;
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
 
         }
 
-        public async Task<bool> UpdateAsync(Referee referee)
+        public async Task<SimpleResult> UpdateAsync(Referee referee)
         {
 
-            if (!await ExistsAsync(referee.Id)) // Validate that the Referee exists in the database before attempting to update
+            var existing = await _context.Referees.FindAsync(referee.Id);
+
+            if (existing == null)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Referee not found" };
             }
+
+
+            var firstName = referee.FirstName?.Trim().ToLower() ?? "";
+            var lastName = referee.LastName?.Trim().ToLower() ?? "";
 
             // Validate that the FirstName and LastName properties are not null, empty or whitespace 
-            if (string.IsNullOrWhiteSpace(referee.FirstName) || string.IsNullOrWhiteSpace(referee.LastName)) 
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName)) 
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "FirstName and LastName are required" };
 
             }
 
-            _context.Referees.Update(referee);
-            return await _context.SaveChangesAsync() > 0;
+            // Controlled update (όπως Court / Player)
+
+            existing.FirstName = firstName;
+            existing.LastName = lastName;
+            existing.Age = referee.Age;
+            existing.Height = referee.Height;
+            existing.PhotoUrl = referee.PhotoUrl?.Trim();
+
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<SimpleResult> DeleteAsync(int id)
         {
 
             var referee = await _context.Referees.FindAsync(id); // Retrieve the Referee to be deleted from the database
@@ -78,7 +100,7 @@ namespace Basketaki.Services
             if (referee == null)
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "Referee not found" };
 
             }
 
@@ -89,17 +111,16 @@ namespace Basketaki.Services
             if (hasMatches)
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "Referee not found" };
 
             }
 
             _context.Referees.Remove(referee);
-            return await _context.SaveChangesAsync() > 0;
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> ExistsAsync(int id) // Check if a Referee with the specified ID exists in the database
-        {
-            return await _context.Referees.AnyAsync(r => r.Id == id); 
-        }
+       
     }
 }

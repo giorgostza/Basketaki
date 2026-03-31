@@ -18,17 +18,13 @@ namespace Basketaki.Models
         public string City { get; set; } = null!;  //  Athens
 
 
-
-        // Season
-        [Required]
+        
         public int SeasonId { get; set; }   
 
-        [ForeignKey("SeasonId")]
         public Season Season { get; set; } = null!;   //   Each League belongs to one Season.
 
 
-
-        // Navigation
+        // Navigation property
         public ICollection<TeamSeasonLeague> TeamSeasonLeagues { get; set; } = new List<TeamSeasonLeague>();   // One League has a lot of Teams
         public ICollection<Match> Matches { get; set; } = new List<Match>();  //  One League has a lot of Matches
     }

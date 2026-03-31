@@ -10,103 +10,115 @@ namespace Basketaki.Services
 
         public TeamService(ApplicationDbContext context)
         {
-
             _context = context;
-
         }
 
         public async Task<List<Team>> GetAllAsync()
         {
             return await _context.Teams
-                        .Include(t => t.TeamSeasonLeagues)  // Show which Leagues the Team participates
-                        .Include(t => t.PlayerSeasonTeams)  // Show Players by Season
-                        .ToListAsync();  
+                .AsNoTracking()
+                .Include(t => t.TeamSeasonLeagues)
+                .Include(t => t.PlayerSeasonTeams)
+                .ToListAsync();
         }
 
-        public async Task<Team?> GetByIdAsync(int id)   
+        public async Task<Team?> GetByIdAsync(int id)
         {
             return await _context.Teams
-                        .Include(t => t.TeamSeasonLeagues)      // Show which Leagues the Team participates
-                        .Include(t => t.PlayerSeasonTeams)      // Show Players by Season
-                        .FirstOrDefaultAsync(t => t.Id == id);
+                .AsNoTracking()
+                .Include(t => t.TeamSeasonLeagues)
+                .Include(t => t.PlayerSeasonTeams)
+                .FirstOrDefaultAsync(t => t.Id == id);
         }
 
-        public async Task<bool> CreateAsync(Team team)
+        public async Task<SimpleResult> CreateAsync(Team team)
         {
-            
-            if (await NameExistsAsync(team.Name))     // Check if the Name is UNIQUE before creating the Team
+            var name = team.Name?.Trim().ToLower() ?? "";
+
+            if (string.IsNullOrWhiteSpace(name))
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Name is required" };
             }
-               
+
+            var exists = await _context.Teams
+                .AnyAsync(t => t.Name.ToLower() == name);
+
+            if (exists)
+            {
+                return new SimpleResult { Success = false, Message = "Team already exists" };
+            }
+
+            team.Name = name;
+            team.CoachName = team.CoachName?.Trim();
+            team.LogoPhotoUrl = team.LogoPhotoUrl?.Trim();
 
             _context.Teams.Add(team);
-            return await _context.SaveChangesAsync() > 0;
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> UpdateAsync(Team team)
+        public async Task<SimpleResult> UpdateAsync(Team team)
         {
-            
-            var exists = await _context.Teams.AnyAsync(t => t.Name == team.Name && t.Id != team.Id);
+            var existing = await _context.Teams.FindAsync(team.Id);
 
-            if (exists)                  // Check if the Name is UNIQUE before updating the Team
-            { 
-
-                return false;
-
+            if (existing == null)
+            {
+                return new SimpleResult { Success = false, Message = "Team not found" };
             }
-                
 
-            _context.Teams.Update(team);
-            return await _context.SaveChangesAsync() > 0;
+            var name = team.Name?.Trim().ToLower() ?? "";
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return new SimpleResult { Success = false, Message = "Name is required" };
+            }
+
+            var duplicate = await _context.Teams
+                .AnyAsync(t => t.Id != team.Id && t.Name.ToLower() == name);
+
+            if (duplicate)
+            {
+                return new SimpleResult { Success = false, Message = "Team already exists" };
+            }
+
+            // Controlled update
+            existing.Name = name;
+            existing.CoachName = team.CoachName?.Trim();
+            existing.LogoPhotoUrl = team.LogoPhotoUrl?.Trim();
+
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<SimpleResult> DeleteAsync(int id)
         {
-            var team = await _context.Teams.FindAsync(id);  // Find the Team by Id
+            var team = await _context.Teams.FindAsync(id);
 
-            if (team == null)                                     
+            if (team == null)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Team not found" };
             }
 
-            
-            if (await _context.TeamSeasonLeagues.AnyAsync(tsl => tsl.TeamId == id))  // Check if the Team is assigned to any League before DELETE
-            {
+            var hasLeagues = await _context.TeamSeasonLeagues.AnyAsync(tsl => tsl.TeamId == id);
 
-                return false;    
-                
+            if (hasLeagues)
+            {
+                return new SimpleResult { Success = false, Message = "Cannot delete team assigned to leagues" };
             }
 
+            var hasPlayers = await _context.PlayerSeasonTeams.AnyAsync(pst => pst.TeamId == id);
 
-            if (await _context.PlayerSeasonTeams.AnyAsync(pst => pst.TeamId == id))  // Check if the Team has Players assigned before DELETE
+            if (hasPlayers)
             {
-
-                return false;  
-                
+                return new SimpleResult { Success = false, Message = "Cannot delete team with players" };
             }
-                
 
             _context.Teams.Remove(team);
-            return await _context.SaveChangesAsync() > 0;
-        }
+            await _context.SaveChangesAsync();
 
-        public async Task<bool> ExistsAsync(int id) 
-        {
-
-            return await _context.Teams.AnyAsync(t => t.Id == id); // Check if a Team with the specified ID exists in the database
-
-        }
-
-        public async Task<bool> NameExistsAsync(string name)    
-        {
-
-            return await _context.Teams.AnyAsync(t => t.Name == name); // Check if a Team with the specified Name already exists in the database
-
+            return new SimpleResult { Success = true };
         }
     }
 }

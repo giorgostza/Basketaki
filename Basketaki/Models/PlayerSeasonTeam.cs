@@ -10,6 +10,14 @@ namespace Basketaki.Models
         public int PlayerId { get; set; }
         public Player Player { get; set; } = null!;  // George
 
+        [Range(0, 99)]
+        public int JerseyNumber { get; set; }
+
+        [Required]
+        public DateOnly JoinDate { get; set; }
+
+        public DateOnly? LeaveDate { get; set; }
+
         [Required]
         public int TeamId { get; set; }
         public Team Team { get; set; } = null!;   // Gran Camaria

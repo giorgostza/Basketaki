@@ -10,116 +10,119 @@ namespace Basketaki.Services
 
         public SeasonService(ApplicationDbContext context)
         {
-
             _context = context;
-
         }
 
-
-        public async Task<List<Season>> GetAllAsync()  // Return Seasons ordered by StartDate in descending order
+        public async Task<List<Season>> GetAllAsync()
         {
-
-            return await _context.Seasons.OrderByDescending(s => s.StartDate).ToListAsync(); 
-
+            return await _context.Seasons
+                .AsNoTracking()
+                .OrderByDescending(s => s.StartDate)
+                .ToListAsync();
         }
 
-        public async Task<bool> CreateAsync(Season season)
+        public async Task<Season?> GetByIdAsync(int id)
         {
+            return await _context.Seasons
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == id);
+        }
 
-            if (await NameExistsAsync(season.Name)) // Validate that the Season Name is unique
+        public async Task<SimpleResult> CreateAsync(Season season)
+        {
+            var name = season.Name?.Trim().ToLower() ?? "";
+
+            if (string.IsNullOrWhiteSpace(name))
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Name is required" };
             }
 
-
-            if (season.StartDate >= season.EndDate) // Validate that the StartDate is before the EndDate
+            if (season.StartDate >= season.EndDate)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "StartDate must be before EndDate" };
             }
-               
-            
-            _context.Seasons.Add(season);
 
-            return await _context.SaveChangesAsync() > 0;
-        }
+            var exists = await _context.Seasons.AnyAsync(s => s.Name.ToLower() == name);
 
-        public async Task<bool> UpdateAsync(Season season)
-        {
-
-            var exists = await _context.Seasons.AnyAsync(s => s.Name == season.Name && s.Id != season.Id);
-            // Validate that the Season Name is unique (excluding the current Season being updated)
             if (exists)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Season already exists" };
             }
 
-            if (season.StartDate >= season.EndDate) // Validate that the StartDate is before the EndDate
-            {
+            season.Name = name;
 
-                return false;
+            _context.Seasons.Add(season);
+            await _context.SaveChangesAsync();
 
-            }
-
-            _context.Seasons.Update(season);
-
-            return await _context.SaveChangesAsync() > 0;
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<SimpleResult> UpdateAsync(Season season)
         {
-            var season = await _context.Seasons.FindAsync(id); // Find the Season by its ID to ensure it exists before trying to delete
+            var existing = await _context.Seasons.FindAsync(season.Id);
+
+            if (existing == null)
+            {
+                return new SimpleResult { Success = false, Message = "Season not found" };
+            }
+
+            var name = season.Name?.Trim().ToLower() ?? "";
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return new SimpleResult { Success = false, Message = "Name is required" };
+            }
+
+            if (season.StartDate >= season.EndDate)
+            {
+                return new SimpleResult { Success = false, Message = "StartDate must be before EndDate" };
+            }
+
+            var duplicate = await _context.Seasons.AnyAsync(s => s.Id != season.Id && s.Name.ToLower() == name);
+
+            if (duplicate)
+            {
+                return new SimpleResult { Success = false, Message = "Season already exists" };
+            }
+
+            // Controlled update
+            existing.Name = name;
+            existing.StartDate = season.StartDate;
+            existing.EndDate = season.EndDate;
+
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
+        }
+
+        public async Task<SimpleResult> DeleteAsync(int id)
+        {
+            var season = await _context.Seasons.FindAsync(id);
 
             if (season == null)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Season not found" };
             }
 
-            // Validate that there are no Leagues associated with the Season before allowing deletion
-            if (await _context.Leagues.AnyAsync(l => l.SeasonId == id)) 
+            var hasLeagues = await _context.Leagues.AnyAsync(l => l.SeasonId == id);
+
+            if (hasLeagues)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Cannot delete season with leagues" };
             }
-                
 
             _context.Seasons.Remove(season);
+            await _context.SaveChangesAsync();
 
-            return await _context.SaveChangesAsync() > 0;
+            return new SimpleResult { Success = true };
         }
 
-
-
-
-        public async Task<bool> ExistsAsync(int id) // Check if a Season with the specified ID exists in the database
+        public async Task<bool> NameExistsAsync(string name)
         {
+            var normalized = name.Trim().ToLower();
 
-            return await _context.Seasons.AnyAsync(s => s.Id == id);
-
+            return await _context.Seasons
+                .AnyAsync(s => s.Name.ToLower() == normalized);
         }
-        
-        public async Task<Season?> GetByIdAsync(int id) // Retrieve a Season by its ID, returning null if it does not exist
-        {
-
-            return await _context.Seasons.FirstOrDefaultAsync(s => s.Id == id);
-
-        }
-
-        public async Task<bool> NameExistsAsync(string name) // Check if a Season with the specified Name already exists in the database
-        {
-
-            return await _context.Seasons.AnyAsync(s => s.Name == name); 
-
-        }
-
-        
     }
 }

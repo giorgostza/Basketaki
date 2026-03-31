@@ -25,6 +25,8 @@ namespace Basketaki.Models
         [Range(0, 200)]
         public int DefensiveRebounds { get; set; }  // 11
 
+        public int TotalRebounds => OffensiveRebounds + DefensiveRebounds;
+
         [Range(0, 200)]
         public int Assists { get; set; }   // 4
 
@@ -34,7 +36,7 @@ namespace Basketaki.Models
         [Range(0, 200)]
         public int Blocks { get; set; }   //  2
 
-        [Range(0, 6)]
+        [Range(0, 5)]
         public int Fouls { get; set; }   //  3
 
         [Range(0, 80)]
@@ -61,6 +63,7 @@ namespace Basketaki.Models
 
         public bool IsMVP { get; set; }   //  True
 
+        [Range(0, 3)]
         public int SuspensionGames { get; set; } // 1 match
     }
 

@@ -19,13 +19,15 @@ namespace Basketaki.Services
         {                                            // PlayerStats and Photos are not included in this method for performance reasons.
 
             return await _context.Matches
-                .Include(m => m.Court)
-                .Include(m => m.League)
-                .Include(m => m.HomeTeamSeasonLeague)
-                        .ThenInclude(tsl => tsl.Team)
-                .Include(m => m.AwayTeamSeasonLeague)
-                        .ThenInclude(tsl => tsl.Team)
-                .ToListAsync(); 
+                        .AsNoTracking()
+                        .Include(m => m.Court)
+                        .Include(m => m.League)
+                        .Include(m => m.HomeTeamSeasonLeague)
+                                .ThenInclude(tsl => tsl.Team)
+                        .Include(m => m.AwayTeamSeasonLeague)
+                                .ThenInclude(tsl => tsl.Team)
+                        .ToListAsync();
+
 
         }
 
@@ -33,25 +35,26 @@ namespace Basketaki.Services
         {                                              // Returns null if not found.
 
             return await _context.Matches
-                .Include(m => m.Court)
-                .Include(m => m.League)
-                .Include(m => m.HomeTeamSeasonLeague)
-                        .ThenInclude(tsl => tsl.Team)
-                .Include(m => m.AwayTeamSeasonLeague)
-                        .ThenInclude(tsl => tsl.Team)
-                .Include(m => m.PlayerStats)
-                .Include(m => m.Photos)
-                .FirstOrDefaultAsync(m => m.Id == id); 
+                        .AsNoTracking()
+                        .Include(m => m.Court)
+                        .Include(m => m.League)
+                        .Include(m => m.HomeTeamSeasonLeague)
+                                .ThenInclude(tsl => tsl.Team)
+                        .Include(m => m.AwayTeamSeasonLeague)
+                                .ThenInclude(tsl => tsl.Team)
+                        .Include(m => m.PlayerStats)
+                        .Include(m => m.Photos)
+                        .FirstOrDefaultAsync(m => m.Id == id); 
 
         }
 
-        public async Task<bool> CreateAsync(Match match)
+        public async Task<SimpleResult> CreateAsync(Match match)
         {
             
             if (match.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId) // check if Home and Away teams are the same
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "Home and Away teams cannot be the same" };
 
             }
 
@@ -59,7 +62,7 @@ namespace Basketaki.Services
             if (match.StartTime >= match.EndTime) // check if StartTime is before EndTime
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "Start Time must be before End Time" };
 
             }
 
@@ -72,7 +75,7 @@ namespace Basketaki.Services
             if (!courtExists || !leagueExists || !homeTeamExists || !awayTeamExists)  // check if Court, League, HomeTeam and AwayTeam exist
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "Court, League, or Teams not found" };
 
             }
 
@@ -83,13 +86,16 @@ namespace Basketaki.Services
             if (courtConflict)
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "Court is already booked at this time" };
+
 
             }
 
 
-
             
+
+
+
             var teamConflict = await _context.Matches.AnyAsync(m => m.MatchDate == match.MatchDate && m.StartTime == match.StartTime &&
                                                                     (m.HomeTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
                                                                          m.AwayTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
@@ -102,30 +108,38 @@ namespace Basketaki.Services
             if (teamConflict)
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "One of the teams already has a match at this time" };
 
             }
 
-            
+
             _context.Matches.Add(match);
-            return await _context.SaveChangesAsync() > 0;
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
+
         }
 
-        public async Task<bool> UpdateAsync(Match match)
+        public async Task<SimpleResult> UpdateAsync(Match match)
         {
-            
-            if (!await ExistsAsync(match.Id)) // check if Match exists
+            var existing = await _context.Matches.FindAsync(match.Id);
+
+            if (existing == null)
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "Match not found" };
 
             }
+                
+
+
+            
 
             
             if (match.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId) // check if Home and Away teams are the same
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "Home and Away teams cannot be the same" };
 
             }
 
@@ -133,7 +147,7 @@ namespace Basketaki.Services
             if (match.StartTime >= match.EndTime)  // check if StartTime is before EndTime
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "StartTime must be before EndTime" };
 
             }
 
@@ -145,7 +159,7 @@ namespace Basketaki.Services
             if (courtConflict)
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "Court is already booked at this time" };
 
             }
 
@@ -161,35 +175,47 @@ namespace Basketaki.Services
             if (teamConflict)
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "One of the teams already has a match at this time" };
 
             }
 
-            _context.Matches.Update(match);
-            return await _context.SaveChangesAsync() > 0;
+
+            // Update only essential fields
+
+            existing.MatchDate = match.MatchDate;
+            existing.StartTime = match.StartTime;
+            existing.EndTime = match.EndTime;
+            existing.CourtId = match.CourtId;
+            existing.LeagueId = match.LeagueId;
+            existing.HomeTeamSeasonLeagueId = match.HomeTeamSeasonLeagueId;
+            existing.AwayTeamSeasonLeagueId = match.AwayTeamSeasonLeagueId;
+            existing.HomeScore = match.HomeScore;
+            existing.AwayScore = match.AwayScore;
+            existing.IsPlayed = match.IsPlayed;
+
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<SimpleResult> DeleteAsync(int id)
         {
             var match = await _context.Matches.FindAsync(id); // check if Match exists
 
             if (match == null)
             {
 
-                return false;
+                return new SimpleResult { Success = false, Message = "Match not found" };
 
             }
 
             _context.Matches.Remove(match);
-            return await _context.SaveChangesAsync() > 0;
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> ExistsAsync(int id)
-        {
-
-            return await _context.Matches.AnyAsync(m => m.Id == id);  // Check if a Match with the specified ID exists in the database
-
-        }
+       
 
     }
 }

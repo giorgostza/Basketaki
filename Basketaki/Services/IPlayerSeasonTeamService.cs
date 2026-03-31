@@ -8,9 +8,9 @@ namespace Basketaki.Services
 
         Task<PlayerSeasonTeam?> GetByIdAsync(int id);
 
-        Task<bool> CreateAsync(PlayerSeasonTeam model);
+        Task<SimpleResult> CreateAsync(PlayerSeasonTeam model);
 
-        Task<bool> DeleteAsync(int id);
+        Task<SimpleResult> DeleteAsync(int id);
 
         Task<bool> ExistsAsync(int id);
 

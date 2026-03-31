@@ -11,10 +11,10 @@ namespace Basketaki.Models
         public string Name { get; set; } = null!; // "2025-2026"
 
         [Required]
-        public DateTime StartDate { get; set; }  //   Start: 01/09/2025
+        public DateOnly StartDate { get; set; }  //   Start: 01/09/2025
 
         [Required]
-        public DateTime EndDate { get; set; }   //   End: 30/06/2026
+        public DateOnly EndDate { get; set; }   //   End: 30/06/2026
 
 
 

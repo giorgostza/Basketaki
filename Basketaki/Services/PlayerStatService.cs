@@ -10,15 +10,13 @@ namespace Basketaki.Services
 
         public PlayerStatService(ApplicationDbContext context)
         {
-
             _context = context;
-
         }
 
-        public async Task<List<PlayerStat>> GetAllAsync() // Get all player stats with related Player and Team information 
-        {                                                 // ordered by Match date, then Team name, then Player last name
-
+        public async Task<List<PlayerStat>> GetAllAsync()
+        {
             return await _context.PlayerStats
+                .AsNoTracking()
                 .Include(ps => ps.PlayerSeasonTeam)
                         .ThenInclude(pst => pst.Player)
                 .Include(ps => ps.PlayerSeasonTeam)
@@ -28,26 +26,24 @@ namespace Basketaki.Services
                 .ThenBy(ps => ps.PlayerSeasonTeam.Team.Name)
                 .ThenBy(ps => ps.PlayerSeasonTeam.Player.LastName)
                 .ToListAsync();
-
         }
 
-        public async Task<PlayerStat?> GetByIdAsync(int id) // Get a single Player stat by ID with related Player and Team information
+        public async Task<PlayerStat?> GetByIdAsync(int id)
         {
-
             return await _context.PlayerStats
+                .AsNoTracking()
                 .Include(ps => ps.PlayerSeasonTeam)
                         .ThenInclude(pst => pst.Player)
                 .Include(ps => ps.PlayerSeasonTeam)
                         .ThenInclude(pst => pst.Team)
                 .Include(ps => ps.Match)
                 .FirstOrDefaultAsync(ps => ps.Id == id);
-
         }
 
-        public async Task<List<PlayerStat>> GetByMatchIdAsync(int matchId) // Get all player stats for a specific Match ID with related Player and Team information
+        public async Task<List<PlayerStat>> GetByMatchIdAsync(int matchId)
         {
-
             return await _context.PlayerStats
+                .AsNoTracking()
                 .Where(ps => ps.MatchId == matchId)
                 .Include(ps => ps.PlayerSeasonTeam)
                        .ThenInclude(pst => pst.Player)
@@ -57,93 +53,101 @@ namespace Basketaki.Services
                 .ThenBy(ps => ps.PlayerSeasonTeam.Player.LastName)
                 .ThenBy(ps => ps.PlayerSeasonTeam.Player.FirstName)
                 .ToListAsync();
-
         }
 
-        public async Task<bool> CreateAsync(PlayerStat playerStat)
+        public async Task<SimpleResult> CreateAsync(PlayerStat playerStat)
         {
-
             if (playerStat.Points < 0)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Points cannot be negative" };
             }
 
-            //Check if a stat for the same Player in the same Match already exists to prevent duplicates
-            var exists = await _context.PlayerStats.AnyAsync(ps => ps.PlayerSeasonTeamId == playerStat.PlayerSeasonTeamId && ps.MatchId == playerStat.MatchId);
+            var pstExists = await _context.PlayerSeasonTeams
+                .AnyAsync(p => p.Id == playerStat.PlayerSeasonTeamId);
+
+            var matchExists = await _context.Matches
+                .AnyAsync(m => m.Id == playerStat.MatchId);
+
+            if (!pstExists || !matchExists)
+            {
+                return new SimpleResult { Success = false, Message = "Invalid Player or Match" };
+            }
+
+            var exists = await _context.PlayerStats
+                .AnyAsync(ps => ps.PlayerSeasonTeamId == playerStat.PlayerSeasonTeamId &&
+                                ps.MatchId == playerStat.MatchId);
 
             if (exists)
             {
-
-                return false;
-
-            }
-
-            
-
-            var pstExists = await _context.PlayerSeasonTeams.AnyAsync(p => p.Id == playerStat.PlayerSeasonTeamId);
-
-            var matchExists = await _context.Matches.AnyAsync(m => m.Id == playerStat.MatchId);
-
-            
-            if (!pstExists || !matchExists) // Ensure the referenced PlayerSeasonTeam and Match exist before creating the stat
-            {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Stats already exist for this player in this match" };
             }
 
             _context.PlayerStats.Add(playerStat);
-            return await _context.SaveChangesAsync() > 0;
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> UpdateAsync(PlayerStat playerStat)
+        public async Task<SimpleResult> UpdateAsync(PlayerStat playerStat)
         {
-            if (!await ExistsAsync(playerStat.Id)) // Ensure the stat exists before trying to update
+            if (!await ExistsAsync(playerStat.Id))
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Stat not found" };
             }
 
-
-            // Check if another stat for the same Player in the same Match already exists to prevent duplicates (excluding the current stat)
-            var duplicate = await _context.PlayerStats.AnyAsync(ps => ps.Id != playerStat.Id 
-                                                                && ps.PlayerSeasonTeamId == playerStat.PlayerSeasonTeamId
-                                                                && ps.MatchId == playerStat.MatchId);
+            var duplicate = await _context.PlayerStats
+                .AnyAsync(ps => ps.Id != playerStat.Id &&
+                                ps.PlayerSeasonTeamId == playerStat.PlayerSeasonTeamId &&
+                                ps.MatchId == playerStat.MatchId);
 
             if (duplicate)
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Duplicate stat for this player and match" };
             }
 
-            _context.PlayerStats.Update(playerStat);
-            return await _context.SaveChangesAsync() > 0;
+            var existing = await _context.PlayerStats.FindAsync(playerStat.Id);
+
+            existing!.Points = playerStat.Points;
+            existing.Assists = playerStat.Assists;
+            existing.OffensiveRebounds = playerStat.OffensiveRebounds;
+            existing.DefensiveRebounds = playerStat.DefensiveRebounds;
+            existing.Steals = playerStat.Steals;
+            existing.Blocks = playerStat.Blocks;
+            existing.Fouls = playerStat.Fouls;
+            existing.MinutesPlayed = playerStat.MinutesPlayed;
+            existing.FreeThrowsMade = playerStat.FreeThrowsMade;
+            existing.FreeThrowsAttempted = playerStat.FreeThrowsAttempted;
+            existing.TwoPointsMade = playerStat.TwoPointsMade;
+            existing.TwoPointsAttempted = playerStat.TwoPointsAttempted;
+            existing.ThreePointsMade = playerStat.ThreePointsMade;
+            existing.ThreePointsAttempted = playerStat.ThreePointsAttempted;
+            existing.IsMVP = playerStat.IsMVP;
+            existing.SuspensionGames = playerStat.SuspensionGames;
+
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<SimpleResult> DeleteAsync(int id)
         {
-            var stat = await _context.PlayerStats.FindAsync(id); // Find the stat by ID to ensure it exists before trying to delete
-
-            if (stat == null)
+            if (!await ExistsAsync(id))
             {
-
-                return false;
-
+                return new SimpleResult { Success = false, Message = "Stat not found" };
             }
 
-            _context.PlayerStats.Remove(stat);
-            return await _context.SaveChangesAsync() > 0;
+            var stat = await _context.PlayerStats.FindAsync(id);
+
+            _context.PlayerStats.Remove(stat!);
+            await _context.SaveChangesAsync();
+
+            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> ExistsAsync(int id) // Check if a PlayerStat with the specified ID exists in the database
+        public async Task<bool> ExistsAsync(int id)
         {
-
-            return await _context.PlayerStats.AnyAsync(ps => ps.Id == id); 
-
+            return await _context.PlayerStats
+                .AnyAsync(ps => ps.Id == id);
         }
     }
 }
