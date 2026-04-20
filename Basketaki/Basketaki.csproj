@@ -16,4 +16,12 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.23" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\coaches\" />
+    <Folder Include="wwwroot\images\matches\" />
+    <Folder Include="wwwroot\images\teams\" />
+    <Folder Include="wwwroot\images\referees\" />
+    <Folder Include="wwwroot\images\players\" />
+  </ItemGroup>
+
 </Project>

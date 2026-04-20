@@ -15,82 +15,180 @@ namespace Basketaki.Services
 
         public async Task<List<Team>> GetAllAsync()
         {
-            return await _context.Teams
-                .AsNoTracking()
-                .Include(t => t.TeamSeasonLeagues)
-                .Include(t => t.PlayerSeasonTeams)
-                .ToListAsync();
+
+            return await _context.Teams.AsNoTracking().Include(t => t.Coach).OrderBy(t => t.Name).ThenBy(t => t.City).ToListAsync();
+
         }
+
 
         public async Task<Team?> GetByIdAsync(int id)
         {
-            return await _context.Teams
-                .AsNoTracking()
-                .Include(t => t.TeamSeasonLeagues)
-                .Include(t => t.PlayerSeasonTeams)
-                .FirstOrDefaultAsync(t => t.Id == id);
+            return await _context.Teams.AsNoTracking().Include(t => t.Coach)
+                                                      .Include(t => t.TeamSeasonLeagues)
+                                                              .ThenInclude(tsl => tsl.League)
+                                                              .ThenInclude(l => l.Season)
+                                                      .Include(t => t.PlayerSeasonTeams)
+                                                              .ThenInclude(pst => pst.Player)
+                                                      .FirstOrDefaultAsync(t => t.Id == id);
+
         }
+
+
 
         public async Task<SimpleResult> CreateAsync(Team team)
         {
-            var name = team.Name?.Trim().ToLower() ?? "";
-
-            if (string.IsNullOrWhiteSpace(name))
+            if (team == null)
             {
-                return new SimpleResult { Success = false, Message = "Name is required" };
+
+                return SimpleResult.Fail("Team data is required.");
+
             }
 
-            var exists = await _context.Teams
-                .AnyAsync(t => t.Name.ToLower() == name);
+
+            if (string.IsNullOrWhiteSpace(team.Name) || string.IsNullOrWhiteSpace(team.City))
+            {
+
+                return SimpleResult.Fail("Name and City are required.");
+
+            }
+
+
+            if (team.CoachId.HasValue)
+            {
+
+                var coachExists = await _context.Coaches.AnyAsync(c => c.Id == team.CoachId.Value);
+
+                if (!coachExists)
+                {
+
+                    return SimpleResult.Fail("Coach not found.");
+
+                }
+
+            }
+
+
+            var trimmedName = team.Name.Trim();
+            var trimmedCity = team.City.Trim();
+            var trimmedPhotoUrl = string.IsNullOrWhiteSpace(team.PhotoUrl) ? null : team.PhotoUrl.Trim();
+
+            var exists = await _context.Teams.AnyAsync(t => t.Name == trimmedName && t.City == trimmedCity);
 
             if (exists)
             {
-                return new SimpleResult { Success = false, Message = "Team already exists" };
+
+                return SimpleResult.Fail("Team with the same name already exists in the same city.");
+
             }
 
-            team.Name = name;
-            team.CoachName = team.CoachName?.Trim();
-            team.LogoPhotoUrl = team.LogoPhotoUrl?.Trim();
+
+
+            team.Name = trimmedName;
+            team.City = trimmedCity;
+            team.PhotoUrl = trimmedPhotoUrl;
+
 
             _context.Teams.Add(team);
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+
+
+            try
+            {
+
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Team created successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to create team. A team with the same name and city may already exist.");
+
+            }
         }
+
+
 
         public async Task<SimpleResult> UpdateAsync(Team team)
         {
+            if (team == null)
+            {
+
+                return SimpleResult.Fail("Team data is required.");
+
+            }
+
+
             var existing = await _context.Teams.FindAsync(team.Id);
 
             if (existing == null)
             {
-                return new SimpleResult { Success = false, Message = "Team not found" };
+
+                return SimpleResult.Fail("Team not found.");
+
             }
 
-            var name = team.Name?.Trim().ToLower() ?? "";
-
-            if (string.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(team.Name) || string.IsNullOrWhiteSpace(team.City))
             {
-                return new SimpleResult { Success = false, Message = "Name is required" };
+
+                return SimpleResult.Fail("Name and City are required.");
+
             }
 
-            var duplicate = await _context.Teams
-                .AnyAsync(t => t.Id != team.Id && t.Name.ToLower() == name);
+            if (team.CoachId.HasValue)
+            {
+
+                var coachExists = await _context.Coaches.AnyAsync(c => c.Id == team.CoachId.Value);
+
+                if (!coachExists)
+                {
+
+                    return SimpleResult.Fail("Coach not found.");
+
+                }
+
+            }
+
+
+            var trimmedName = team.Name.Trim();
+            var trimmedCity = team.City.Trim();
+            var trimmedPhotoUrl = string.IsNullOrWhiteSpace(team.PhotoUrl) ? null : team.PhotoUrl.Trim();
+
+            var duplicate = await _context.Teams.AnyAsync(t => t.Id != team.Id && t.Name == trimmedName && t.City == trimmedCity);
 
             if (duplicate)
             {
-                return new SimpleResult { Success = false, Message = "Team already exists" };
+
+                return SimpleResult.Fail("Team with the same name already exists in the same city.");
+
             }
 
-            // Controlled update
-            existing.Name = name;
-            existing.CoachName = team.CoachName?.Trim();
-            existing.LogoPhotoUrl = team.LogoPhotoUrl?.Trim();
 
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+            existing.Name = trimmedName;
+            existing.City = trimmedCity;
+            existing.PhotoUrl = trimmedPhotoUrl;
+            existing.CoachId = team.CoachId;
+
+
+
+            try
+            {
+
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Team updated successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to update team. A team with the same name and city may already exist.");
+
+            }
+
         }
+
+
 
         public async Task<SimpleResult> DeleteAsync(int id)
         {
@@ -98,27 +196,51 @@ namespace Basketaki.Services
 
             if (team == null)
             {
-                return new SimpleResult { Success = false, Message = "Team not found" };
+
+                return SimpleResult.Fail("Team not found.");
+
             }
+
 
             var hasLeagues = await _context.TeamSeasonLeagues.AnyAsync(tsl => tsl.TeamId == id);
 
             if (hasLeagues)
             {
-                return new SimpleResult { Success = false, Message = "Cannot delete team assigned to leagues" };
+
+                return SimpleResult.Fail("Cannot delete team assigned to leagues.");
+
             }
+
 
             var hasPlayers = await _context.PlayerSeasonTeams.AnyAsync(pst => pst.TeamId == id);
 
             if (hasPlayers)
             {
-                return new SimpleResult { Success = false, Message = "Cannot delete team with players" };
+
+                return SimpleResult.Fail("Cannot delete team with players.");
+
             }
 
-            _context.Teams.Remove(team);
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+
+            try
+            {
+
+                _context.Teams.Remove(team);
+                await _context.SaveChangesAsync();
+
+                return SimpleResult.Ok("Team deleted successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to delete team because it is used by other data.");
+
+            }
+
+
         }
+
     }
 }

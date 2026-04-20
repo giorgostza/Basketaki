@@ -1,0 +1,72 @@
+﻿@model Basketaki.Models.Coach
+
+@{
+    ViewData["Title"] = "Coach Details";
+}
+
+<h1 class="mb-4">Coach Details</h1>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h4 class="card-title mb-4">@Model.FullName</h4>
+
+        <dl class="row">
+            <dt class="col-sm-3">First Name</dt>
+            <dd class="col-sm-9">@Model.FirstName</dd>
+
+            <dt class="col-sm-3">Last Name</dt>
+            <dd class="col-sm-9">@Model.LastName</dd>
+
+            <dt class="col-sm-3">Date of Birth</dt>
+            <dd class="col-sm-9">@Model.DateOfBirth.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">Height</dt>
+            <dd class="col-sm-9">@Model.Height cm</dd>
+
+            <dt class="col-sm-3">Photo</dt>
+            <dd class="col-sm-9">
+                @if (string.IsNullOrWhiteSpace(Model.PhotoUrl))
+                {
+                    <span class="text-muted">No photo</span>
+                }
+                else
+                {
+                    <a href="@Model.PhotoUrl" target="_blank">Open Photo</a>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Teams Count</dt>
+            <dd class="col-sm-9">@Model.Teams.Count</dd>
+        </dl>
+    </div>
+</div>
+
+@if (Model.Teams.Any())
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Teams</h5>
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Team Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var team in Model.Teams.OrderBy(t => t.Name))
+                    {
+                        <tr>
+                            <td>@team.Name</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

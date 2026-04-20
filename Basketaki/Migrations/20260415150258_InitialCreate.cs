@@ -12,6 +12,23 @@ namespace Basketaki.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Coaches",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    DateOfBirth = table.Column<DateOnly>(type: "date", nullable: false),
+                    Height = table.Column<int>(type: "int", nullable: false),
+                    PhotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Coaches", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Courts",
                 columns: table => new
                 {
@@ -19,7 +36,7 @@ namespace Basketaki.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Location = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -34,11 +51,11 @@ namespace Basketaki.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Height = table.Column<double>(type: "float", nullable: false),
+                    DateOfBirth = table.Column<DateOnly>(type: "date", nullable: false),
+                    Height = table.Column<int>(type: "int", nullable: false),
                     Weight = table.Column<int>(type: "int", nullable: false),
-                    JerseyNumber = table.Column<int>(type: "int", nullable: false),
                     Position = table.Column<int>(type: "int", nullable: false),
-                    PlayerPhotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                    PhotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -53,8 +70,8 @@ namespace Basketaki.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Age = table.Column<int>(type: "int", nullable: false),
-                    Height = table.Column<double>(type: "float", nullable: false),
+                    DateOfBirth = table.Column<DateOnly>(type: "date", nullable: false),
+                    Height = table.Column<int>(type: "int", nullable: false),
                     PhotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
@@ -69,8 +86,8 @@ namespace Basketaki.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    StartDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    EndDate = table.Column<DateOnly>(type: "date", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -84,12 +101,19 @@ namespace Basketaki.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CoachName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    LogoPhotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                    City = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    PhotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CoachId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Teams", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Teams_Coaches_CoachId",
+                        column: x => x.CoachId,
+                        principalTable: "Coaches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -120,6 +144,9 @@ namespace Basketaki.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PlayerId = table.Column<int>(type: "int", nullable: false),
+                    JerseyNumber = table.Column<int>(type: "int", nullable: false),
+                    JoinDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    LeaveDate = table.Column<DateOnly>(type: "date", nullable: true),
                     TeamId = table.Column<int>(type: "int", nullable: false),
                     SeasonId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -131,7 +158,7 @@ namespace Basketaki.Migrations
                         column: x => x.PlayerId,
                         principalTable: "Players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_PlayerSeasonTeams_Seasons_SeasonId",
                         column: x => x.SeasonId,
@@ -163,13 +190,13 @@ namespace Basketaki.Migrations
                         column: x => x.LeagueId,
                         principalTable: "Leagues",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_TeamSeasonLeagues_Teams_TeamId",
                         column: x => x.TeamId,
                         principalTable: "Teams",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -178,15 +205,15 @@ namespace Basketaki.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MatchDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    MatchDate = table.Column<DateOnly>(type: "date", nullable: false),
                     StartTime = table.Column<TimeOnly>(type: "time", nullable: false),
                     EndTime = table.Column<TimeOnly>(type: "time", nullable: false),
                     CourtId = table.Column<int>(type: "int", nullable: false),
                     LeagueId = table.Column<int>(type: "int", nullable: false),
                     HomeTeamSeasonLeagueId = table.Column<int>(type: "int", nullable: false),
                     AwayTeamSeasonLeagueId = table.Column<int>(type: "int", nullable: false),
-                    HomeScore = table.Column<int>(type: "int", nullable: false),
-                    AwayScore = table.Column<int>(type: "int", nullable: false),
+                    HomeScore = table.Column<int>(type: "int", nullable: true),
+                    AwayScore = table.Column<int>(type: "int", nullable: true),
                     IsPlayed = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
@@ -251,7 +278,8 @@ namespace Basketaki.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Url = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     MatchId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -332,6 +360,18 @@ namespace Basketaki.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Courts_Name_Location",
+                table: "Courts",
+                columns: new[] { "Name", "Location" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Leagues_Name_City_SeasonId",
+                table: "Leagues",
+                columns: new[] { "Name", "City", "SeasonId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Leagues_SeasonId",
                 table: "Leagues",
                 column: "SeasonId");
@@ -368,9 +408,9 @@ namespace Basketaki.Migrations
                 column: "RefereeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PlayerSeasonTeams_PlayerId_SeasonId",
+                name: "IX_PlayerSeasonTeams_PlayerId_TeamId_SeasonId_JoinDate",
                 table: "PlayerSeasonTeams",
-                columns: new[] { "PlayerId", "SeasonId" },
+                columns: new[] { "PlayerId", "TeamId", "SeasonId", "JoinDate" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -392,6 +432,23 @@ namespace Basketaki.Migrations
                 name: "IX_PlayerStats_PlayerSeasonTeamId_MatchId",
                 table: "PlayerStats",
                 columns: new[] { "PlayerSeasonTeamId", "MatchId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Seasons_Name",
+                table: "Seasons",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_CoachId",
+                table: "Teams",
+                column: "CoachId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_Name_City",
+                table: "Teams",
+                columns: new[] { "Name", "City" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -453,6 +510,9 @@ namespace Basketaki.Migrations
 
             migrationBuilder.DropTable(
                 name: "Seasons");
+
+            migrationBuilder.DropTable(
+                name: "Coaches");
         }
     }
 }

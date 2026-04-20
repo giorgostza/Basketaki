@@ -7,35 +7,45 @@ namespace Basketaki.Models
     {
         public int Id { get; set; }
 
-        [Required]
-        [MaxLength(50)]
-        public string FirstName { get; set; } = null!;  // George
 
         [Required]
+        [MinLength(2)]
         [MaxLength(50)]
-        public string LastName { get; set; } = null!;  //Tzavellas
+        public string FirstName { get; set; } = null!;  
+
+
+        [Required]
+        [MinLength(2)]
+        [MaxLength(50)]
+        public string LastName { get; set; } = null!; 
+
 
         public string FullName => $"{FirstName} {LastName}";
 
+
         [Required]
+        [DataType(DataType.Date)]
         public DateOnly DateOfBirth { get; set; }
 
+
         [Range(150, 250)]
-        public int Height { get; set; }  // 191 cm
+        public int Height { get; set; }  
+
 
         [Range(50, 200)]
-        public int Weight { get; set; }    //   100 kg
+        public int Weight { get; set; }    
 
 
         [Required]
-        public PlayerPosition Position { get; set; }   // Center
+        public PlayerPosition Position { get; set; }   
+
 
         [MaxLength(500)]
         public string? PhotoUrl { get; set; }
 
 
 
-        public ICollection<PlayerSeasonTeam> PlayerSeasonTeams { get; set; } = new List<PlayerSeasonTeam>(); // In wich Team plays per Season 
+        public ICollection<PlayerSeasonTeam> PlayerSeasonTeams { get; set; } = new List<PlayerSeasonTeam>(); 
 
     }
 }

@@ -10,10 +10,10 @@ namespace Basketaki.Services
 
         Task<SimpleResult> CreateAsync(PlayerSeasonTeam model);
 
+        Task<SimpleResult> UpdateAsync(PlayerSeasonTeam model);
+
         Task<SimpleResult> DeleteAsync(int id);
 
-        Task<bool> ExistsAsync(int id);
-
-        Task<bool> CombinationExistsAsync(int playerId, int seasonId);
+        
     }
 }

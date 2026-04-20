@@ -11,8 +11,5 @@ namespace Basketaki.Services
         Task<SimpleResult> UpdateAsync(League league);       // Update league
         Task<SimpleResult> DeleteAsync(int id);              // Delete league
 
-        Task<bool> ExistsAsync(int id);              // Check if exists
-        Task<bool> NameExistsAsync(string name , int seasonId);     // Check duplicate name 
-
     }
 }

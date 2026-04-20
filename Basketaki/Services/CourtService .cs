@@ -10,110 +10,159 @@ namespace Basketaki.Services
 
         public CourtService(ApplicationDbContext context)
         {
-
             _context = context;
-
         }
+
 
         public async Task<List<Court>> GetAllAsync()
         {
 
-            return await _context.Courts.AsNoTracking().ToListAsync();  // Get all Courts from the database without tracking them for changes (Read Only)
+            return await _context.Courts.AsNoTracking().OrderBy(c => c.Name).ThenBy(c => c.Location).ToListAsync();
 
         }
+
 
         public async Task<Court?> GetByIdAsync(int id)
         {
 
-            return await _context.Courts.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id); // Get a specific Court by its ID, or return null if not found
+            return await _context.Courts.AsNoTracking().Include(c => c.Matches).FirstOrDefaultAsync(c => c.Id == id);
 
         }
 
+
         public async Task<SimpleResult> CreateAsync(Court court)
         {
+            if (court == null)
+            {
+
+                return SimpleResult.Fail("Court data is required.");
+
+            }
+
 
             if (string.IsNullOrWhiteSpace(court.Name) || string.IsNullOrWhiteSpace(court.Location))
             {
 
-                return new SimpleResult { Success = false, Message = "Name and Location are required" };
+                return SimpleResult.Fail("Name and Location are required.");
 
             }
 
-            var name = court.Name.Trim().ToLower();
-            var location = court.Location.Trim().ToLower();
 
-            var exists = await _context.Courts.AnyAsync(c => c.Name.ToLower() == name && c.Location.ToLower() == location);  
+            var trimmedName = court.Name.Trim();
+            var trimmedLocation = court.Location.Trim();
+            var trimmedDescription = string.IsNullOrWhiteSpace(court.Description) ? null : court.Description.Trim();
 
-            if (exists)                     // Check if a Court with the same Name and Location already exists in the database
+
+
+            var exists = await _context.Courts.AnyAsync(c => c.Name == trimmedName && c.Location == trimmedLocation);
+
+            if (exists)
             {
 
-                return new SimpleResult { Success = false, Message = "Court with same name and location already exists" };
+                return SimpleResult.Fail("Court with the same name and location already exists.");
 
             }
 
-            court.Name = court.Name.Trim();
-            court.Location = court.Location.Trim();
+
+            court.Name = trimmedName;
+            court.Location = trimmedLocation;
+            court.Description = trimmedDescription;
 
             _context.Courts.Add(court);
-            await _context.SaveChangesAsync();
-            return new SimpleResult { Success = true };
+
+            try
+            {
+
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Court created successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to create court. A court with the same name and location may already exist.");
+
+            }
 
         }
 
-        public async Task<SimpleResult> UpdateAsync(Court court)  
+
+
+        public async Task<SimpleResult> UpdateAsync(Court court)
         {
+            if (court == null)
+            {
+
+                return SimpleResult.Fail("Court data is required.");
+
+            }
+
+
             var existing = await _context.Courts.FindAsync(court.Id);
 
             if (existing == null)
             {
 
-                return new SimpleResult { Success = false, Message = "Court not found" };
+                return SimpleResult.Fail("Court not found.");
 
             }
+
 
             if (string.IsNullOrWhiteSpace(court.Name) || string.IsNullOrWhiteSpace(court.Location))
             {
 
-                return new SimpleResult { Success = false, Message = "Name and Location are required" };
+                return SimpleResult.Fail("Name and Location are required.");
 
             }
 
-            var name = court.Name.Trim().ToLower();
-            var location = court.Location.Trim().ToLower();
+
+            var trimmedName = court.Name.Trim();
+            var trimmedLocation = court.Location.Trim();
+            var trimmedDescription = string.IsNullOrWhiteSpace(court.Description) ? null : court.Description.Trim();
 
 
 
-            var duplicate = await _context.Courts.AnyAsync(c => c.Name.ToLower() == name && c.Location.ToLower() == location && c.Id != court.Id);  
+            var duplicate = await _context.Courts.AnyAsync(c => c.Name == trimmedName && c.Location == trimmedLocation && c.Id != court.Id);
 
-            if (duplicate)    
+            if (duplicate)
             {
 
-                return new SimpleResult { Success = false, Message = "Court with same name and location already exists" };
+                return SimpleResult.Fail("Court with the same name and location already exists.");
 
             }
 
-            existing.Name = court.Name.Trim();
-            existing.Location = court.Location.Trim();
-            existing.Description = court.Description;
 
+            existing.Name = trimmedName;
+            existing.Location = trimmedLocation;
+            existing.Description = trimmedDescription;
 
+            try
+            {
 
-            await _context.SaveChangesAsync();
-            return new SimpleResult { Success = true };
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Court updated successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to update court. A court with the same name and location may already exist.");
+
+            }
 
         }
 
+
         public async Task<SimpleResult> DeleteAsync(int id)
         {
-            var court = await _context.Courts.FindAsync(id);  // Find the Court by its ID
+            var court = await _context.Courts.FindAsync(id);
 
             if (court == null)
             {
 
-                return new SimpleResult { Success = false, Message = "Court not found" };
+                return SimpleResult.Fail("Court not found.");
 
             }
-
 
 
             var hasMatches = await _context.Matches.AnyAsync(m => m.CourtId == id);
@@ -121,22 +170,28 @@ namespace Basketaki.Services
             if (hasMatches)
             {
 
-                return new SimpleResult { Success = false, Message = "Cannot delete court because it has matches" };       // Cannot delete the Court if it has associated Matches
+                return SimpleResult.Fail("Cannot delete court because it has matches.");
 
             }
 
 
-            _context.Courts.Remove(court);
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+            try
+            {
 
-        }
+                _context.Courts.Remove(court);
+                await _context.SaveChangesAsync();
 
-        public async Task<bool> ExistsAsync(int id)
-        {
+                return SimpleResult.Ok("Court deleted successfully.");
 
-            return await _context.Courts.AnyAsync(c => c.Id == id); // Check if a Court with the specified ID exists in the database
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to delete court because it is used by other data.");
+
+            }
+
 
         }
 

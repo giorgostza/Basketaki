@@ -3,8 +3,6 @@
     public class MatchReferee
     {
 
-       
-
         public int MatchId { get; set; }
         public Match Match { get; set; } = null!;
 

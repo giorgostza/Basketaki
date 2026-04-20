@@ -10,177 +10,304 @@ namespace Basketaki.Services
 
         public MatchService(ApplicationDbContext context)
         {
-
             _context = context;
+        }
+
+        public async Task<List<Match>> GetAllAsync()
+        {
+            return await _context.Matches.AsNoTracking().Include(m => m.Court)
+                                                        .Include(m => m.League)
+                                                        .Include(m => m.HomeTeamSeasonLeague)
+                                                            .ThenInclude(tsl => tsl.Team)
+                                                        .Include(m => m.AwayTeamSeasonLeague)
+                                                            .ThenInclude(tsl => tsl.Team)
+                                                        .OrderByDescending(m => m.MatchDate)
+                                                        .ThenBy(m => m.StartTime)
+                                                        .ToListAsync();
 
         }
 
-        public async Task<List<Match>> GetAllAsync() // Retrieve all Matches, including related entities such as Court, League, Home and Away teams.
-        {                                            // PlayerStats and Photos are not included in this method for performance reasons.
 
-            return await _context.Matches
-                        .AsNoTracking()
-                        .Include(m => m.Court)
-                        .Include(m => m.League)
-                        .Include(m => m.HomeTeamSeasonLeague)
-                                .ThenInclude(tsl => tsl.Team)
-                        .Include(m => m.AwayTeamSeasonLeague)
-                                .ThenInclude(tsl => tsl.Team)
-                        .ToListAsync();
-
-
-        }
-
-        public async Task<Match?> GetByIdAsync(int id) // Retrieve a Match by its ID, including related entities such as Court, League, Home and Away teams, PlayerStats and Photos.
-        {                                              // Returns null if not found.
-
-            return await _context.Matches
-                        .AsNoTracking()
-                        .Include(m => m.Court)
-                        .Include(m => m.League)
-                        .Include(m => m.HomeTeamSeasonLeague)
-                                .ThenInclude(tsl => tsl.Team)
-                        .Include(m => m.AwayTeamSeasonLeague)
-                                .ThenInclude(tsl => tsl.Team)
-                        .Include(m => m.PlayerStats)
-                        .Include(m => m.Photos)
-                        .FirstOrDefaultAsync(m => m.Id == id); 
+        public async Task<Match?> GetByIdAsync(int id)
+        {
+            return await _context.Matches.AsNoTracking().Include(m => m.Court)
+                                                        .Include(m => m.League)
+                                                        .Include(m => m.HomeTeamSeasonLeague)
+                                                            .ThenInclude(tsl => tsl.Team)
+                                                        .Include(m => m.AwayTeamSeasonLeague)
+                                                            .ThenInclude(tsl => tsl.Team)
+                                                        .Include(m => m.PlayerStats)
+                                                            .ThenInclude(ps => ps.PlayerSeasonTeam)
+                                                            .ThenInclude(pst => pst.Player)
+                                                        .Include(m => m.Photos)
+                                                        .FirstOrDefaultAsync(m => m.Id == id);
 
         }
+
+
 
         public async Task<SimpleResult> CreateAsync(Match match)
         {
-            
-            if (match.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId) // check if Home and Away teams are the same
+            if (match == null)
             {
 
-                return new SimpleResult { Success = false, Message = "Home and Away teams cannot be the same" };
+                return SimpleResult.Fail("Match data is required.");
 
             }
 
-            
-            if (match.StartTime >= match.EndTime) // check if StartTime is before EndTime
+            if (match.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId)
             {
 
-                return new SimpleResult { Success = false, Message = "Start Time must be before End Time" };
+                return SimpleResult.Fail("Home and Away teams cannot be the same.");
 
             }
 
-            
+            if (match.StartTime >= match.EndTime)
+            {
+
+                return SimpleResult.Fail("Start time must be before end time.");
+
+            }
+
+            if (!match.IsPlayed && (match.HomeScore.HasValue || match.AwayScore.HasValue))
+            {
+
+                return SimpleResult.Fail("Scores cannot be set if the match has not been played.");
+
+            }
+
+            if (match.IsPlayed && (!match.HomeScore.HasValue || !match.AwayScore.HasValue))
+            {
+
+                return SimpleResult.Fail("Scores are required when the match is marked as played.");
+
+            }
+
+
+
             var courtExists = await _context.Courts.AnyAsync(c => c.Id == match.CourtId);
-            var leagueExists = await _context.Leagues.AnyAsync(l => l.Id == match.LeagueId);
-            var homeTeamExists = await _context.TeamSeasonLeagues.AnyAsync(t => t.Id == match.HomeTeamSeasonLeagueId);
-            var awayTeamExists = await _context.TeamSeasonLeagues.AnyAsync(t => t.Id == match.AwayTeamSeasonLeagueId);
 
-            if (!courtExists || !leagueExists || !homeTeamExists || !awayTeamExists)  // check if Court, League, HomeTeam and AwayTeam exist
+            if (!courtExists)
             {
 
-                return new SimpleResult { Success = false, Message = "Court, League, or Teams not found" };
+                return SimpleResult.Fail("Court not found.");
 
             }
 
-            
-            var courtConflict = await _context.Matches.AnyAsync(m => m.CourtId == match.CourtId && m.MatchDate == match.MatchDate && m.StartTime == match.StartTime );
-            // check if there's a Match at the same Court, Date and Time
+
+            var league = await _context.Leagues.AsNoTracking().FirstOrDefaultAsync(l => l.Id == match.LeagueId);
+
+            if (league == null)
+            {
+
+                return SimpleResult.Fail("League not found.");
+
+            }
+
+
+
+            var homeTeamSeasonLeague = await _context.TeamSeasonLeagues.AsNoTracking().FirstOrDefaultAsync(t => t.Id == match.HomeTeamSeasonLeagueId);
+            var awayTeamSeasonLeague = await _context.TeamSeasonLeagues.AsNoTracking().FirstOrDefaultAsync(t => t.Id == match.AwayTeamSeasonLeagueId);
+
+            if (homeTeamSeasonLeague == null || awayTeamSeasonLeague == null)
+            {
+
+                return SimpleResult.Fail("Home or away team not found.");
+
+            }
+
+
+            if (homeTeamSeasonLeague.LeagueId != match.LeagueId || awayTeamSeasonLeague.LeagueId != match.LeagueId)
+            {
+
+                return SimpleResult.Fail("Both teams must belong to the selected league.");
+
+            }
+
+
+            var courtConflict = await _context.Matches.AnyAsync(m => m.CourtId == match.CourtId &&
+                                                                m.MatchDate == match.MatchDate &&
+                                                                match.StartTime < m.EndTime &&
+                                                                match.EndTime > m.StartTime);
 
             if (courtConflict)
             {
 
-                return new SimpleResult { Success = false, Message = "Court is already booked at this time" };
-
+                return SimpleResult.Fail("Court is already booked during this time.");
 
             }
 
 
-            
-
-
-
-            var teamConflict = await _context.Matches.AnyAsync(m => m.MatchDate == match.MatchDate && m.StartTime == match.StartTime &&
-                                                                    (m.HomeTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
-                                                                         m.AwayTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
-                                                                         m.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId ||
-                                                                         m.AwayTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId)
-                                                               );
-            // check if either Home or Away team has another Match at the same Date and Time
-
+            var teamConflict = await _context.Matches.AnyAsync(m => m.MatchDate == match.MatchDate &&
+                                                               match.StartTime < m.EndTime &&
+                                                               match.EndTime > m.StartTime &&
+                                                                (
+                                                                  m.HomeTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
+                                                                  m.AwayTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
+                                                                  m.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId ||
+                                                                  m.AwayTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId
+                                                                 ));
 
             if (teamConflict)
             {
 
-                return new SimpleResult { Success = false, Message = "One of the teams already has a match at this time" };
+                return SimpleResult.Fail("One of the teams already has a match during this time.");
 
             }
 
 
             _context.Matches.Add(match);
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+
+            try
+            {
+
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Match created successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to create match. The selected court or teams may already be booked for this time.");
+
+            }
+
 
         }
 
+
         public async Task<SimpleResult> UpdateAsync(Match match)
         {
+            if (match == null)
+            {
+
+                return SimpleResult.Fail("Match data is required.");
+
+            }
+
+
             var existing = await _context.Matches.FindAsync(match.Id);
 
             if (existing == null)
             {
 
-                return new SimpleResult { Success = false, Message = "Match not found" };
+                return SimpleResult.Fail("Match not found.");
 
             }
-                
 
 
-            
-
-            
-            if (match.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId) // check if Home and Away teams are the same
+            if (match.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId)
             {
 
-                return new SimpleResult { Success = false, Message = "Home and Away teams cannot be the same" };
+                return SimpleResult.Fail("Home and Away teams cannot be the same.");
 
             }
 
-            
-            if (match.StartTime >= match.EndTime)  // check if StartTime is before EndTime
+
+            if (match.StartTime >= match.EndTime)
             {
 
-                return new SimpleResult { Success = false, Message = "StartTime must be before EndTime" };
+                return SimpleResult.Fail("Start time must be before end time.");
 
             }
 
 
-           
-            var courtConflict = await _context.Matches.AnyAsync(m => m.Id != match.Id && m.CourtId == match.CourtId && m.MatchDate == match.MatchDate && m.StartTime == match.StartTime);
-            // check if there's another Match at the same Court, Date and Time (excluding the current Match)
+            if (!match.IsPlayed && (match.HomeScore.HasValue || match.AwayScore.HasValue))
+            {
+
+                return SimpleResult.Fail("Scores cannot be set if the match has not been played.");
+
+            }
+
+
+            if (match.IsPlayed && (!match.HomeScore.HasValue || !match.AwayScore.HasValue))
+            {
+
+                return SimpleResult.Fail("Scores are required when the match is marked as played.");
+
+            }
+
+
+            var courtExists = await _context.Courts.AnyAsync(c => c.Id == match.CourtId);
+
+            if (!courtExists)
+            {
+
+                return SimpleResult.Fail("Court not found.");
+
+            }
+
+
+            var league = await _context.Leagues.AsNoTracking().FirstOrDefaultAsync(l => l.Id == match.LeagueId);
+
+            if (league == null)
+            {
+
+                return SimpleResult.Fail("League not found.");
+
+            }
+
+
+
+            var homeTeamSeasonLeague = await _context.TeamSeasonLeagues.AsNoTracking()
+                                                                       .FirstOrDefaultAsync(t => t.Id == match.HomeTeamSeasonLeagueId);
+
+            var awayTeamSeasonLeague = await _context.TeamSeasonLeagues.AsNoTracking()
+                                                                       .FirstOrDefaultAsync(t => t.Id == match.AwayTeamSeasonLeagueId);
+
+            if (homeTeamSeasonLeague == null || awayTeamSeasonLeague == null)
+            {
+
+                return SimpleResult.Fail("Home or away team not found.");
+
+            }
+
+
+            if (homeTeamSeasonLeague.LeagueId != match.LeagueId || awayTeamSeasonLeague.LeagueId != match.LeagueId)
+            {
+
+                return SimpleResult.Fail("Both teams must belong to the selected league.");
+
+            }
+
+
+
+            var courtConflict = await _context.Matches.AnyAsync(m => m.Id != match.Id &&
+                                                                m.CourtId == match.CourtId &&
+                                                                m.MatchDate == match.MatchDate &&
+                                                                match.StartTime < m.EndTime &&
+                                                                match.EndTime > m.StartTime);
 
             if (courtConflict)
             {
 
-                return new SimpleResult { Success = false, Message = "Court is already booked at this time" };
+                return SimpleResult.Fail("Court is already booked during this time.");
 
             }
 
-           
-            var teamConflict = await _context.Matches.AnyAsync(m => m.Id != match.Id && m.MatchDate == match.MatchDate && m.StartTime == match.StartTime &&
-                                                                   (m.HomeTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
+
+
+            var teamConflict = await _context.Matches.AnyAsync(m => m.Id != match.Id &&
+                                                               m.MatchDate == match.MatchDate &&
+                                                               match.StartTime < m.EndTime &&
+                                                               match.EndTime > m.StartTime &&
+                                                                   (
+                                                                    m.HomeTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
                                                                     m.AwayTeamSeasonLeagueId == match.HomeTeamSeasonLeagueId ||
                                                                     m.HomeTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId ||
-                                                                    m.AwayTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId)
-                                                               );
-            // check if either Home or Away team has another Match at the same Date and Time (excluding the current Match)
+                                                                    m.AwayTeamSeasonLeagueId == match.AwayTeamSeasonLeagueId
+                                                                ));
 
             if (teamConflict)
             {
 
-                return new SimpleResult { Success = false, Message = "One of the teams already has a match at this time" };
+                return SimpleResult.Fail("One of the teams already has a match during this time.");
 
             }
 
 
-            // Update only essential fields
+
 
             existing.MatchDate = match.MatchDate;
             existing.StartTime = match.StartTime;
@@ -193,29 +320,55 @@ namespace Basketaki.Services
             existing.AwayScore = match.AwayScore;
             existing.IsPlayed = match.IsPlayed;
 
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+
+            try
+            {
+
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Match updated successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to update match. The selected court or teams may already be booked for this time.");
+
+            }
+
         }
+
+
 
         public async Task<SimpleResult> DeleteAsync(int id)
         {
-            var match = await _context.Matches.FindAsync(id); // check if Match exists
+            var match = await _context.Matches.FindAsync(id);
 
             if (match == null)
             {
 
-                return new SimpleResult { Success = false, Message = "Match not found" };
+                return SimpleResult.Fail("Match not found.");
 
             }
 
-            _context.Matches.Remove(match);
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+            try
+            {
+
+                _context.Matches.Remove(match);
+                await _context.SaveChangesAsync();
+
+                return SimpleResult.Ok("Match deleted successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to delete match because it is used by other data.");
+
+            }
+
         }
-
-       
 
     }
 }

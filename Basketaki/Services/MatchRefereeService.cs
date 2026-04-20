@@ -15,49 +15,61 @@ namespace Basketaki.Services
 
         public async Task<List<MatchReferee>> GetByMatchIdAsync(int matchId)
         {
-            return await _context.MatchReferees
-                .AsNoTracking()
-                .Include(mr => mr.Referee)
-                .Where(mr => mr.MatchId == matchId)
-                .OrderBy(mr => mr.Referee.LastName)
-                .ThenBy(mr => mr.Referee.FirstName)
-                .ToListAsync();
+
+            return await _context.MatchReferees.AsNoTracking().Include(mr => mr.Referee)
+                                                              .Where(mr => mr.MatchId == matchId)
+                                                              .OrderBy(mr => mr.Referee.LastName)
+                                                              .ThenBy(mr => mr.Referee.FirstName)
+                                                              .ToListAsync();
+
         }
 
-        public async Task<SimpleResult> AssignRefereeAsync(int matchId, int refereeId)
+        public async Task<SimpleResult> CreateAsync(int matchId, int refereeId)
         {
-            var match = await _context.Matches
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == matchId);
+            var match = await _context.Matches.AsNoTracking().FirstOrDefaultAsync(m => m.Id == matchId);
 
             if (match == null)
             {
-                return new SimpleResult { Success = false, Message = "Match not found" };
+
+                return SimpleResult.Fail("Match not found.");
+
             }
+
 
             var refereeExists = await _context.Referees.AnyAsync(r => r.Id == refereeId);
 
             if (!refereeExists)
             {
-                return new SimpleResult { Success = false, Message = "Referee not found" };
+
+                return SimpleResult.Fail("Referee not found.");
+
             }
 
-            if (await ExistsAsync(matchId, refereeId))
+
+            var alreadyAssigned = await _context.MatchReferees.AnyAsync(mr => mr.MatchId == matchId && mr.RefereeId == refereeId);
+
+            if (alreadyAssigned)
             {
-                return new SimpleResult { Success = false, Message = "Referee already assigned to this match" };
+
+                return SimpleResult.Fail("Referee already assigned to this match.");
+
             }
 
-            var conflict = await _context.MatchReferees
-                .Include(mr => mr.Match)
-                .AnyAsync(mr =>
-                    mr.RefereeId == refereeId &&
-                    mr.Match.MatchDate == match.MatchDate &&
-                    mr.Match.StartTime == match.StartTime);
+
+
+            var conflict = await _context.MatchReferees.Include(mr => mr.Match).AnyAsync(mr => mr.RefereeId == refereeId &&
+                                                                                               mr.Match.MatchDate == match.MatchDate &&
+                                                                                               match.StartTime < mr.Match.EndTime &&
+                                                                                               match.EndTime > mr.Match.StartTime);
 
             if (conflict)
             {
-                return new SimpleResult { Success = false, Message = "Referee has another match at this time" };
+
+                return SimpleResult.Fail("Referee has another match during this time.");
+
             }
+
+
 
             var matchReferee = new MatchReferee
             {
@@ -66,31 +78,58 @@ namespace Basketaki.Services
             };
 
             _context.MatchReferees.Add(matchReferee);
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
-        }
 
-        public async Task<SimpleResult> RemoveRefereeAsync(int matchId, int refereeId)
-        {
-            if (!await ExistsAsync(matchId, refereeId))
+
+            try
             {
-                return new SimpleResult { Success = false, Message = "Assignment not found" };
+
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Referee assigned successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to assign referee to the match.");
+
             }
 
-            var entity = await _context.MatchReferees
-                .FirstAsync(mr => mr.MatchId == matchId && mr.RefereeId == refereeId);
-
-            _context.MatchReferees.Remove(entity);
-            await _context.SaveChangesAsync();
-
-            return new SimpleResult { Success = true };
         }
 
-        public async Task<bool> ExistsAsync(int matchId, int refereeId)
+
+
+        public async Task<SimpleResult> DeleteAsync(int matchId, int refereeId)
         {
-            return await _context.MatchReferees
-                .AnyAsync(mr => mr.MatchId == matchId && mr.RefereeId == refereeId);
+            var entity = await _context.MatchReferees.FirstOrDefaultAsync(mr => mr.MatchId == matchId && mr.RefereeId == refereeId);
+
+            if (entity == null)
+            {
+
+                return SimpleResult.Fail("Assignment not found.");
+
+            }
+
+
+
+            try
+            {
+
+                _context.MatchReferees.Remove(entity);
+                await _context.SaveChangesAsync();
+
+                return SimpleResult.Ok("Referee removed successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to remove referee from the match.");
+
+            }
+
+
         }
+
     }
 }

@@ -6,21 +6,28 @@ namespace Basketaki.Models
     {
         public int Id { get; set; }
 
+
         [Required]
         [MinLength(3)]
         [MaxLength(100)]
-        public string Name { get; set; } = null!;   // Basketaki Arena
+        [Display(Name = "Court Name")]
+        public string Name { get; set; } = null!;   
+
 
         [Required]
         [MinLength(3)]
         [MaxLength(150)]
-        public string Location { get; set; } = null!;   // Menidi
+        [Display(Name = "Location")]
+        public string Location { get; set; } = null!;   
+
 
         [MaxLength(300)]
-        public string? Description { get; set; }    // Description of the Court for example if it is Indoor/Outdoor
+        [Display(Name = "Description")]
+        public string? Description { get; set; }    
 
 
-        // Navigation property
-        public ICollection<Match> Matches { get; set; } = new List<Match>();   // The games that take place in this Court
+
+       
+        public ICollection<Match> Matches { get; set; } = new List<Match>();   
     }
 }

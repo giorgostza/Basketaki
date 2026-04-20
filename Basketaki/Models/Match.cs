@@ -8,40 +8,50 @@ namespace Basketaki.Models
 
 
         [Required]
-        public DateOnly MatchDate { get; set; }  // 10/1/2026 
+        public DateOnly MatchDate { get; set; }  
+
 
         [Required]
-        public TimeOnly StartTime { get; set; }   // 18:00
+        public TimeOnly StartTime { get; set; } 
+        
 
         [Required]
-        public TimeOnly EndTime { get; set; }     // 19:30
+        public TimeOnly EndTime { get; set; }    
 
 
         public int CourtId { get; set; }
-        public Court Court { get; set; } = null!;  // Basketaki Arena
+        public Court Court { get; set; } = null!;  
+
 
         public int LeagueId { get; set; }
-        public League League { get; set; } = null!;   // Master League
+        public League League { get; set; } = null!;  
+
 
         public int HomeTeamSeasonLeagueId { get; set; }
-        public TeamSeasonLeague HomeTeamSeasonLeague { get; set; } = null!;   // Gran Camaria
+        public TeamSeasonLeague HomeTeamSeasonLeague { get; set; } = null!;  
+        
 
         public int AwayTeamSeasonLeagueId { get; set; }    
-        public TeamSeasonLeague AwayTeamSeasonLeague { get; set; } = null!;   // Rejects
+        public TeamSeasonLeague AwayTeamSeasonLeague { get; set; } = null!;   
+
 
         [Range(0, 300)]
-        public int? HomeScore { get; set; }   //  75-69 
+        public int? HomeScore { get; set; }   
+
 
         [Range(0, 300)]
-        public int? AwayScore { get; set; }   // 59-65
-
-        public bool IsPlayed { get; set; } = false; 
+        public int? AwayScore { get; set; }   
 
 
+        public bool IsPlayed { get; set; } = false;
 
+
+        
         public ICollection<PlayerStat> PlayerStats { get; set; } = new List<PlayerStat>();
 
         public ICollection<MatchPhoto> Photos { get; set; } = new List<MatchPhoto>();
+
+        public ICollection<MatchReferee> MatchReferees { get; set; } = new List<MatchReferee>();
 
 
     }

@@ -10,26 +10,19 @@ namespace Basketaki.Services
 
         public PlayerService(ApplicationDbContext context)
         {
-
             _context = context;
+        }
+
+        public async Task<List<Player>> GetAllAsync()
+        {
+
+            return await _context.Players.AsNoTracking().OrderBy(p => p.LastName).ThenBy(p => p.FirstName).ToListAsync();
 
         }
 
-        public async Task<List<Player>> GetAllAsync() // Retrieve all Players from the database
-        {                                             // including related Team and Season information through the PlayerSeasonTeams relationship
 
-            return await _context.Players.AsNoTracking().Include(p => p.PlayerSeasonTeams)
-                                                                .ThenInclude(pst => pst.Team)
-                                                        .Include(p => p.PlayerSeasonTeams)
-                                                                .ThenInclude(pst => pst.Season)
-                                                        .ToListAsync();
-
-
-        }
-
-        public async Task<Player?> GetByIdAsync(int id) // Retrieve a Player by its ID 
-        {                                               // including related Team and Season information through the PlayerSeasonTeams relationship
-
+        public async Task<Player?> GetByIdAsync(int id)
+        {
             return await _context.Players.AsNoTracking().Include(p => p.PlayerSeasonTeams)
                                                                 .ThenInclude(pst => pst.Team)
                                                         .Include(p => p.PlayerSeasonTeams)
@@ -38,137 +31,215 @@ namespace Basketaki.Services
 
         }
 
+
+
         public async Task<SimpleResult> CreateAsync(Player player)
         {
-            var firstName = (player.FirstName != null) ? player.FirstName.Trim().ToLower() : "";
-            var lastName = (player.LastName != null) ? player.LastName.Trim().ToLower() : "";
-            
-
-            // Check if both FirstName and LastName are null, empty, or consist only of whitespace characters
-            if ( string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName)) 
+            if (player == null)
             {
 
-                return new SimpleResult { Success = false, Message = "FirstName or LastName is required" };
+                return SimpleResult.Fail("Player data is required.");
 
             }
 
-            // Check if Height is less than  0
-            if (player.JerseyNumber < 0)
+
+            if (string.IsNullOrWhiteSpace(player.FirstName) || string.IsNullOrWhiteSpace(player.LastName))
             {
 
-                return new SimpleResult { Success = false, Message = "JerseyNumber must be positive" };
+                return SimpleResult.Fail("First name and last name are required.");
 
             }
 
-            player.FirstName = firstName;
-            player.LastName = lastName;
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            if (player.DateOfBirth > today)
+            {
+
+                return SimpleResult.Fail("Date of birth cannot be in the future.");
+
+            }
+
+
+            var age = CalculateAge(player.DateOfBirth);
+
+            if (age < 15 || age > 50)
+            {
+
+                return SimpleResult.Fail("Player age must be between 15 and 50.");
+
+            }
+
+
+
+            var trimmedFirstName = player.FirstName.Trim();
+            var trimmedLastName = player.LastName.Trim();
+            var trimmedPhotoUrl = string.IsNullOrWhiteSpace(player.PhotoUrl) ? null : player.PhotoUrl.Trim();
+
+
+            player.FirstName = trimmedFirstName;
+            player.LastName = trimmedLastName;
+            player.PhotoUrl = trimmedPhotoUrl;
 
             _context.Players.Add(player);
-             await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+            try
+            {
+
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Player created successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to create player.");
+
+            }
+
+
         }
+
+
 
         public async Task<SimpleResult> UpdateAsync(Player player)
         {
+            if (player == null)
+            {
+
+                return SimpleResult.Fail("Player data is required.");
+
+            }
+
+
             var existing = await _context.Players.FindAsync(player.Id);
 
             if (existing == null)
             {
 
-                return new SimpleResult { Success = false, Message = "Player not found" };
+                return SimpleResult.Fail("Player not found.");
 
             }
 
 
-            var firstName = (player.FirstName != null) ? player.FirstName.Trim().ToLower() : "";
-            var lastName = (player.LastName != null) ? player.LastName.Trim().ToLower() : "";
-
-
-            if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName))
+            if (string.IsNullOrWhiteSpace(player.FirstName) || string.IsNullOrWhiteSpace(player.LastName))
             {
 
-                return new SimpleResult { Success = false, Message = "FirstName or LastName is required" };
+                return SimpleResult.Fail("First name and last name are required.");
 
             }
-                
 
-            // Check jersey conflicts in PlayerSeasonTeams
-            foreach (var pst in player.PlayerSeasonTeams)
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            if (player.DateOfBirth > today)
             {
-                bool jerseyConflict = await _context.PlayerSeasonTeams.Include(x => x.Player).AnyAsync(x => x.TeamId == pst.TeamId &&
-                                                                                                       x.SeasonId == pst.SeasonId &&
-                                                                                                       x.Player.JerseyNumber == player.JerseyNumber &&
-                                                                                                       x.PlayerId != player.Id);
 
+                return SimpleResult.Fail("Date of birth cannot be in the future.");
 
-                if (jerseyConflict) 
-                {
-
-                    return new SimpleResult { Success = false, Message = "Jersey number already taken in this team/season" };
-
-                }
-                   
             }
 
-            // Update these fields
-            existing.FirstName = firstName;
-            existing.LastName = lastName;
+
+            var age = CalculateAge(player.DateOfBirth);
+
+            if (age < 15 || age > 50)
+            {
+
+                return SimpleResult.Fail("Player age must be between 15 and 50.");
+
+            }
+
+
+            var trimmedFirstName = player.FirstName.Trim();
+            var trimmedLastName = player.LastName.Trim();
+            var trimmedPhotoUrl = string.IsNullOrWhiteSpace(player.PhotoUrl) ? null : player.PhotoUrl.Trim();
+
+
+            existing.FirstName = trimmedFirstName;
+            existing.LastName = trimmedLastName;
+            existing.DateOfBirth = player.DateOfBirth;
             existing.Height = player.Height;
             existing.Weight = player.Weight;
-            existing.JerseyNumber = player.JerseyNumber;
             existing.Position = player.Position;
-            existing.PlayerPhotoUrl = player.PlayerPhotoUrl?.Trim();
+            existing.PhotoUrl = trimmedPhotoUrl;
 
-            await _context.SaveChangesAsync();
-            return new SimpleResult { Success = true };
+
+
+            try
+            {
+
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Player updated successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to update player.");
+
+            }
+
         }
+
 
 
         public async Task<SimpleResult> DeleteAsync(int id)
         {
-            var player = await _context.Players.FindAsync(id); // Find the Player entity by its ID
+            var player = await _context.Players.FindAsync(id);
 
             if (player == null)
             {
 
-                return new SimpleResult { Success = false, Message = "Player not found" };
+                return SimpleResult.Fail("Player not found.");
 
             }
 
 
-            // Check if there are any PlayerSeasonTeam records associated with the Player
-            if (await _context.PlayerSeasonTeams.AnyAsync(pst => pst.PlayerId == id)) 
+            var hasPlayerSeasonTeams = await _context.PlayerSeasonTeams.AnyAsync(pst => pst.PlayerId == id);
+
+            if (hasPlayerSeasonTeams)
             {
 
-                return new SimpleResult { Success = false, Message = "Cannot delete player assigned to teams/seasons" };
+                return SimpleResult.Fail("Cannot delete player assigned to teams/seasons.");
 
             }
 
-            _context.Players.Remove(player);
-            await _context.SaveChangesAsync();
+            try
+            {
 
-            return new SimpleResult { Success = true };
+                _context.Players.Remove(player);
+                await _context.SaveChangesAsync();
+
+                return SimpleResult.Ok("Player deleted successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to delete player because it is used by other data.");
+
+            }
 
         }
 
-        public async Task<bool> ExistsAsync(int id)
+
+
+        private int CalculateAge(DateOnly birthDate)
         {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var age = today.Year - birthDate.Year;
 
-            return await _context.Players.AnyAsync(p => p.Id == id);  // Check if a Player with the specified ID exists in the database
+            if (birthDate > today.AddYears(-age))
+            {
 
-        }
+                age--;
 
-        
-        public async Task<bool> JerseyNumberExistsAsync(int jerseyNumber, int teamId, int seasonId)
-        {
+            }
 
-            return await _context.PlayerSeasonTeams
-                        .Include(pst => pst.Player).AnyAsync(pst => pst.TeamId == teamId && pst.SeasonId == seasonId && pst.Player.JerseyNumber == jerseyNumber);
-            // Check if any PlayerSeasonTeam exists with the same TeamId, SeasonId and Player's JerseyNumber
-            // ensuring that Jersey Numbers are unique within a Team for a given Season.
+            return age;
 
         }
+
 
     }
 }

@@ -14,6 +14,6 @@ namespace Basketaki.Services
 
         Task<SimpleResult> DeleteAsync(int id);           // Deletes a Court by its ID and returns true if successful, false if not 
 
-        Task<bool> ExistsAsync(int id);  // Checks if a Court with the specified ID exists and returns true if it does, false otherwise
+        
     }
 }

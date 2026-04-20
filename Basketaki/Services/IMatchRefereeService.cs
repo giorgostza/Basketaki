@@ -6,10 +6,10 @@ namespace Basketaki.Services
     {
         Task<List<MatchReferee>> GetByMatchIdAsync(int matchId);
 
-        Task<SimpleResult> AssignRefereeAsync(int matchId, int refereeId);
+        Task<SimpleResult> CreateAsync(int matchId, int refereeId);
 
-        Task<SimpleResult> RemoveRefereeAsync(int matchId, int refereeId);
+        Task<SimpleResult> DeleteAsync(int matchId, int refereeId);
 
-        Task<bool> ExistsAsync(int matchId, int refereeId);
+       
     }
 }

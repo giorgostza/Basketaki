@@ -2,70 +2,86 @@
 
 namespace Basketaki.Models
 {
-    public class PlayerStat       //  A Player's Statistics in the Match
+    public class PlayerStat       
     {
         public int Id { get; set; }
 
 
+        [Required]
         public int PlayerSeasonTeamId { get; set; }
         public PlayerSeasonTeam PlayerSeasonTeam { get; set; } = null!;
 
 
-
+        [Required]
         public int MatchId { get; set; }
-        public Match Match { get; set; } = null!;   // 10/1/2026 - Basketaki Arena
+        public Match Match { get; set; } = null!;   
 
 
         [Range(0, 200)]
-        public int Points { get; set; }    // 19
+        public int Points { get; set; }    
+
 
         [Range(0, 200)]
-        public int OffensiveRebounds { get; set; }  // 5
+        public int OffensiveRebounds { get; set; }  
+
 
         [Range(0, 200)]
-        public int DefensiveRebounds { get; set; }  // 11
+        public int DefensiveRebounds { get; set; }  
+
 
         public int TotalRebounds => OffensiveRebounds + DefensiveRebounds;
 
-        [Range(0, 200)]
-        public int Assists { get; set; }   // 4
 
         [Range(0, 200)]
-        public int Steals { get; set; }   //  0
+        public int Assists { get; set; }   
+
 
         [Range(0, 200)]
-        public int Blocks { get; set; }   //  2
+        public int Steals { get; set; }   
+
+
+        [Range(0, 200)]
+        public int Blocks { get; set; }   
+
 
         [Range(0, 5)]
-        public int Fouls { get; set; }   //  3
+        public int Fouls { get; set; }   
+
 
         [Range(0, 80)]
-        public int MinutesPlayed { get; set; }  // 32'
+        public int MinutesPlayed { get; set; }  
+
 
         [Range(0, 100)]
-        public int FreeThrowsMade { get; set; }       // 7
+        public int FreeThrowsMade { get; set; }      
+
 
         [Range(0, 200)]
-        public int FreeThrowsAttempted { get; set; }  // 12
+        public int FreeThrowsAttempted { get; set; } 
+
 
         [Range(0, 100)]
-        public int TwoPointsMade { get; set; }    //  8
+        public int TwoPointsMade { get; set; }    
+
 
         [Range(0, 200)]
-        public int TwoPointsAttempted { get; set; }  // 15
+        public int TwoPointsAttempted { get; set; }  
+
 
         [Range(0, 100)]
-        public int ThreePointsMade { get; set; }     // 0
+        public int ThreePointsMade { get; set; }    
+
 
         [Range(0, 200)]
-        public int ThreePointsAttempted { get; set; }  // 0
+        public int ThreePointsAttempted { get; set; }  
 
 
-        public bool IsMVP { get; set; }   //  True
+        public bool IsMVP { get; set; }   
+
 
         [Range(0, 3)]
-        public int SuspensionGames { get; set; } // 1 match
-    }
+        public int SuspensionGames { get; set; } 
 
+    }
 
 }

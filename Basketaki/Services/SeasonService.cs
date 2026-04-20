@@ -15,85 +15,154 @@ namespace Basketaki.Services
 
         public async Task<List<Season>> GetAllAsync()
         {
-            return await _context.Seasons
-                .AsNoTracking()
-                .OrderByDescending(s => s.StartDate)
-                .ToListAsync();
+            return await _context.Seasons.AsNoTracking().OrderByDescending(s => s.StartDate).ToListAsync();
+
         }
+
 
         public async Task<Season?> GetByIdAsync(int id)
         {
-            return await _context.Seasons
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.Id == id);
+            return await _context.Seasons.AsNoTracking().Include(s => s.Leagues)
+                                                        .Include(s => s.PlayerSeasonTeams)
+                                                                .ThenInclude(pst => pst.Player)
+                                                        .Include(s => s.PlayerSeasonTeams)
+                                                                .ThenInclude(pst => pst.Team)
+                                                        .FirstOrDefaultAsync(s => s.Id == id);
+
         }
+
+
 
         public async Task<SimpleResult> CreateAsync(Season season)
         {
-            var name = season.Name?.Trim().ToLower() ?? "";
-
-            if (string.IsNullOrWhiteSpace(name))
+            if (season == null)
             {
-                return new SimpleResult { Success = false, Message = "Name is required" };
+
+                return SimpleResult.Fail("Season data is required.");
+
             }
+
+
+            if (string.IsNullOrWhiteSpace(season.Name))
+            {
+
+                return SimpleResult.Fail("Name is required.");
+
+            }
+
 
             if (season.StartDate >= season.EndDate)
             {
-                return new SimpleResult { Success = false, Message = "StartDate must be before EndDate" };
+
+                return SimpleResult.Fail("Start date must be before end date.");
+
             }
 
-            var exists = await _context.Seasons.AnyAsync(s => s.Name.ToLower() == name);
+
+            var trimmedName = season.Name.Trim();
+            var exists = await _context.Seasons.AnyAsync(s => s.Name == trimmedName);
 
             if (exists)
             {
-                return new SimpleResult { Success = false, Message = "Season already exists" };
+
+                return SimpleResult.Fail("Season already exists.");
+
             }
 
-            season.Name = name;
+
+            season.Name = trimmedName;
+
 
             _context.Seasons.Add(season);
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+
+            try
+            {
+
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Season created successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to create season. A season with the same name may already exist.");
+
+            }
+
         }
+
+
 
         public async Task<SimpleResult> UpdateAsync(Season season)
         {
+            if (season == null)
+            {
+
+                return SimpleResult.Fail("Season data is required.");
+
+            }
+
+
             var existing = await _context.Seasons.FindAsync(season.Id);
 
             if (existing == null)
             {
-                return new SimpleResult { Success = false, Message = "Season not found" };
+
+                return SimpleResult.Fail("Season not found.");
+
             }
 
-            var name = season.Name?.Trim().ToLower() ?? "";
 
-            if (string.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(season.Name))
             {
-                return new SimpleResult { Success = false, Message = "Name is required" };
+
+                return SimpleResult.Fail("Name is required.");
+
             }
+
 
             if (season.StartDate >= season.EndDate)
             {
-                return new SimpleResult { Success = false, Message = "StartDate must be before EndDate" };
+
+                return SimpleResult.Fail("Start date must be before end date.");
+
             }
 
-            var duplicate = await _context.Seasons.AnyAsync(s => s.Id != season.Id && s.Name.ToLower() == name);
+
+            var trimmedName = season.Name.Trim();
+            var duplicate = await _context.Seasons.AnyAsync(s => s.Id != season.Id && s.Name == trimmedName);
 
             if (duplicate)
             {
-                return new SimpleResult { Success = false, Message = "Season already exists" };
+
+                return SimpleResult.Fail("Season already exists.");
+
             }
 
-            // Controlled update
-            existing.Name = name;
+
+            existing.Name = trimmedName;
             existing.StartDate = season.StartDate;
             existing.EndDate = season.EndDate;
 
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+            try
+            {
+
+                await _context.SaveChangesAsync();
+                return SimpleResult.Ok("Season updated successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to update season. A season with the same name may already exist.");
+
+            }
+
         }
+
+
 
         public async Task<SimpleResult> DeleteAsync(int id)
         {
@@ -101,28 +170,50 @@ namespace Basketaki.Services
 
             if (season == null)
             {
-                return new SimpleResult { Success = false, Message = "Season not found" };
+
+                return SimpleResult.Fail("Season not found.");
+
             }
+
 
             var hasLeagues = await _context.Leagues.AnyAsync(l => l.SeasonId == id);
 
             if (hasLeagues)
             {
-                return new SimpleResult { Success = false, Message = "Cannot delete season with leagues" };
+
+                return SimpleResult.Fail("Cannot delete season with leagues.");
+
             }
 
-            _context.Seasons.Remove(season);
-            await _context.SaveChangesAsync();
 
-            return new SimpleResult { Success = true };
+            var hasPlayerSeasonTeams = await _context.PlayerSeasonTeams.AnyAsync(pst => pst.SeasonId == id);
+
+            if (hasPlayerSeasonTeams)
+            {
+
+                return SimpleResult.Fail("Cannot delete season with player registrations.");
+
+            }
+
+
+
+            try
+            {
+
+                _context.Seasons.Remove(season);
+                await _context.SaveChangesAsync();
+
+                return SimpleResult.Ok("Season deleted successfully.");
+
+            }
+            catch (DbUpdateException)
+            {
+
+                return SimpleResult.Fail("Unable to delete season because it is used by other data.");
+
+            }
+
         }
 
-        public async Task<bool> NameExistsAsync(string name)
-        {
-            var normalized = name.Trim().ToLower();
-
-            return await _context.Seasons
-                .AnyAsync(s => s.Name.ToLower() == normalized);
-        }
     }
 }

@@ -1,36 +1,100 @@
 ﻿@model Basketaki.Models.Season
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Season Details";
 }
 
-<h1>Details</h1>
+<h1 class="mb-4">Season Details</h1>
 
-<div>
-    <h4>Season</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StartDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StartDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EndDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EndDate)
-        </dd>
-    </dl>
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h4 class="card-title mb-4">@Model.Name</h4>
+
+        <dl class="row">
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+
+            <dt class="col-sm-3">Start Date</dt>
+            <dd class="col-sm-9">@Model.StartDate.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">End Date</dt>
+            <dd class="col-sm-9">@Model.EndDate.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">Leagues Count</dt>
+            <dd class="col-sm-9">@Model.Leagues.Count</dd>
+
+            <dt class="col-sm-3">Player Registrations</dt>
+            <dd class="col-sm-9">@Model.PlayerSeasonTeams.Count</dd>
+        </dl>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+@if (Model.Leagues.Any())
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Leagues</h5>
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>City</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var league in Model.Leagues.OrderBy(l => l.Name).ThenBy(l => l.City))
+                    {
+                        <tr>
+                            <td>@league.Name</td>
+                            <td>@league.City</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (Model.PlayerSeasonTeams.Any())
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Player Registrations</h5>
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Team</th>
+                        <th>Join Date</th>
+                        <th>Leave Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var registration in Model.PlayerSeasonTeams
+                                    .OrderBy(p => p.Team.Name)
+                                    .ThenBy(p => p.Player.LastName)
+                                    .ThenBy(p => p.Player.FirstName))
+                    {
+                        <tr>
+                            <td>@registration.Player.FirstName @registration.Player.LastName</td>
+                            <td>@registration.Team.Name</td>
+                            <td>@registration.JoinDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @(registration.LeaveDate.HasValue
+                                                        ? registration.LeaveDate.Value.ToString("dd/MM/yyyy")
+                                                        : "Still Active")
+                    </td>
+                </tr>
+                                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

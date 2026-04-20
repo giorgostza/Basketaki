@@ -15,34 +15,38 @@ namespace Basketaki.Controllers
 
         public async Task<IActionResult> Index()
         {
+
             var courts = await _courtService.GetAllAsync();
 
             return View(courts);
         }
 
-        public async Task<IActionResult> Details(int? id)
+
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-                
-
-            var court = await _courtService.GetByIdAsync(id.Value);
+            var court = await _courtService.GetByIdAsync(id);
 
             if (court == null)
             {
+
                 return NotFound();
+
             }
 
             return View(court);
         }
 
+
+
+        [HttpGet]
         public IActionResult Create()
         {
+
             return View();
+
         }
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -50,33 +54,50 @@ namespace Basketaki.Controllers
         {
             if (!ModelState.IsValid)
             {
+
+                return View(court);
+
+            }
+
+
+
+            var result = await _courtService.CreateAsync(court);
+
+            if (!result.Success)
+            {
+
+                ModelState.AddModelError(string.Empty, result.Message ?? "Failed to create court.");
+
                 return View(court);
             }
-                
 
-            await _courtService.CreateAsync(court);
+
+
+            TempData["SuccessMessage"] = result.Message;
 
             return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-                
 
-            var court = await _courtService.GetByIdAsync(id.Value);
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var court = await _courtService.GetByIdAsync(id);
 
             if (court == null)
             {
+
                 return NotFound();
+
             }
-                
+
+
 
             return View(court);
         }
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -84,47 +105,76 @@ namespace Basketaki.Controllers
         {
             if (id != court.Id)
             {
-                return NotFound();
+
+                return BadRequest();
+
             }
 
 
             if (!ModelState.IsValid)
             {
+
+                return View(court);
+
+            }
+
+
+
+            var result = await _courtService.UpdateAsync(court);
+
+            if (!result.Success)
+            {
+
+                ModelState.AddModelError(string.Empty, result.Message ?? "Failed to update court.");
+
                 return View(court);
             }
-                                
 
-            await _courtService.UpdateAsync(court);
+
+            TempData["SuccessMessage"] = result.Message;
 
             return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-               
 
-            var court = await _courtService.GetByIdAsync(id.Value);
+
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var court = await _courtService.GetByIdAsync(id);
 
             if (court == null)
             {
+
                 return NotFound();
+
             }
-                
 
             return View(court);
         }
+
+
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _courtService.DeleteAsync(id);
+            var result = await _courtService.DeleteAsync(id);
+
+            if (!result.Success)
+            {
+
+                TempData["ErrorMessage"] = result.Message;
+
+                return RedirectToAction(nameof(Delete), new { id });
+            }
+
+
+            TempData["SuccessMessage"] = result.Message;
 
             return RedirectToAction(nameof(Index));
         }
+
+
     }
 }

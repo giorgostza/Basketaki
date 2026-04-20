@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Basketaki.Models;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Basketaki.Data
 {
@@ -10,6 +9,7 @@ namespace Basketaki.Data
         {
         }
 
+        public DbSet<Coach> Coaches { get; set; }
         public DbSet<Court> Courts { get; set; }
         public DbSet<League> Leagues { get; set; }
         public DbSet<Match> Matches { get; set; }
@@ -22,46 +22,38 @@ namespace Basketaki.Data
         public DbSet<Season> Seasons { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<TeamSeasonLeague> TeamSeasonLeagues { get; set; }
-
         public DbSet<TeamStanding> TeamStandings { get; set; }
-
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
             base.OnModelCreating(modelBuilder);
-
-
 
             ConfigureRelationships(modelBuilder);
             ConfigureConstraints(modelBuilder);
-
         }
-
-
 
         private void ConfigureRelationships(ModelBuilder modelBuilder)
         {
-            
+            modelBuilder.Entity<Team>()
+                .HasOne(t => t.Coach)
+                .WithMany(c => c.Teams)
+                .HasForeignKey(t => t.CoachId)
+                .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<Match>()             // One Court has a lot of Matches (1-many)
+
+            modelBuilder.Entity<Match>()
                 .HasOne(m => m.Court)
                 .WithMany(c => c.Matches)
                 .HasForeignKey(m => m.CourtId)
-                .OnDelete(DeleteBehavior.Restrict);  /* if a Court is deleted, the Matches that are played there will not be deleted,
-                                                        but their CourtId will be set to null (if nullable)
-                                                        or the delete operation will be prevented if not nullable. */
+                .OnDelete(DeleteBehavior.Restrict);
 
 
-            modelBuilder.Entity<Match>()             // One League has a lot of Matches (1-many)
+            modelBuilder.Entity<Match>()
                 .HasOne(m => m.League)
                 .WithMany(l => l.Matches)
                 .HasForeignKey(m => m.LeagueId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-            /* A Match has one HomeTeamSeasonLeague and one AwayTeamSeasonLeague,
-               but a TeamSeasonLeague can be the Home or Away team in many Matches (1-many) */
 
             modelBuilder.Entity<Match>()
                 .HasOne(m => m.HomeTeamSeasonLeague)
@@ -77,43 +69,34 @@ namespace Basketaki.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-            
-
-            modelBuilder.Entity<PlayerStat>()                 // One Player has a lot of Stats ( per match) (1-many)
+            modelBuilder.Entity<PlayerStat>()
                 .HasOne(ps => ps.PlayerSeasonTeam)
-                .WithMany()
+                .WithMany(pst => pst.PlayerStats)
                 .HasForeignKey(ps => ps.PlayerSeasonTeamId)
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-            
-
-            modelBuilder.Entity<PlayerStat>()       //One Match has a lot of PlayerStats (1-many)
+            modelBuilder.Entity<PlayerStat>()
                 .HasOne(ps => ps.Match)
                 .WithMany(m => m.PlayerStats)
                 .HasForeignKey(ps => ps.MatchId)
-                .OnDelete(DeleteBehavior.Cascade);  /* If a Match is deleted
-                                                       all the PlayerStats related to that Match will be deleted */
+                .OnDelete(DeleteBehavior.Cascade);
 
 
-            
-
-            modelBuilder.Entity<MatchPhoto>()       // One Match has a lot of Photos (1-many)
+            modelBuilder.Entity<MatchPhoto>()
                 .HasOne(mp => mp.Match)
                 .WithMany(m => m.Photos)
                 .HasForeignKey(mp => mp.MatchId)
                 .OnDelete(DeleteBehavior.Cascade);
 
 
+            modelBuilder.Entity<MatchReferee>()
+                .HasKey(mr => new { mr.MatchId, mr.RefereeId });
 
 
             modelBuilder.Entity<MatchReferee>()
-                        .HasKey(mr => new { mr.MatchId, mr.RefereeId });
-
-
-            modelBuilder.Entity<MatchReferee>()     // One Match has a lot of Referees (many-many) with the join table MatchReferee
                 .HasOne(mr => mr.Match)
-                .WithMany()
+                .WithMany(m => m.MatchReferees)
                 .HasForeignKey(mr => mr.MatchId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -125,51 +108,49 @@ namespace Basketaki.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-
-
-            modelBuilder.Entity<TeamSeasonLeague>() // One Team has a lot of TeamSeasonLeagues (1-many)
+            modelBuilder.Entity<TeamSeasonLeague>()
                 .HasOne(tsl => tsl.Team)
                 .WithMany(t => t.TeamSeasonLeagues)
                 .HasForeignKey(tsl => tsl.TeamId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
 
-            modelBuilder.Entity<TeamSeasonLeague>() // One Season has a lot of TeamSeasonLeagues (1-many)
+            modelBuilder.Entity<TeamSeasonLeague>()
                 .HasOne(tsl => tsl.League)
                 .WithMany(l => l.TeamSeasonLeagues)
                 .HasForeignKey(tsl => tsl.LeagueId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
 
-            modelBuilder.Entity<PlayerSeasonTeam>() // One Player has a lot of PlayerSeasonTeams (1-many)
+            modelBuilder.Entity<PlayerSeasonTeam>()
                 .HasOne(pst => pst.Player)
                 .WithMany(p => p.PlayerSeasonTeams)
                 .HasForeignKey(pst => pst.PlayerId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
 
-            modelBuilder.Entity<PlayerSeasonTeam>()  // One Team has a lot of PlayerSeasonTeams (1-many)
+            modelBuilder.Entity<PlayerSeasonTeam>()
                 .HasOne(pst => pst.Team)
                 .WithMany(t => t.PlayerSeasonTeams)
                 .HasForeignKey(pst => pst.TeamId)
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-            modelBuilder.Entity<PlayerSeasonTeam>()  // One Season has a lot of PlayerSeasonTeams (1-many)
+            modelBuilder.Entity<PlayerSeasonTeam>()
                 .HasOne(pst => pst.Season)
                 .WithMany(s => s.PlayerSeasonTeams)
                 .HasForeignKey(pst => pst.SeasonId)
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-            modelBuilder.Entity<League>()            // One Season has a lot of Leagues (1-many)
+            modelBuilder.Entity<League>()
                 .HasOne(l => l.Season)
                 .WithMany(s => s.Leagues)
                 .HasForeignKey(l => l.SeasonId)
                 .OnDelete(DeleteBehavior.Restrict);
 
 
-            modelBuilder.Entity<TeamStanding>()       // One TeamSeasonLeague has one TeamStanding (1-1)
+            modelBuilder.Entity<TeamStanding>()
                 .HasOne(ts => ts.TeamSeasonLeague)
                 .WithOne()
                 .HasForeignKey<TeamStanding>(ts => ts.TeamSeasonLeagueId)
@@ -177,26 +158,24 @@ namespace Basketaki.Data
 
         }
 
-
-
         private void ConfigureConstraints(ModelBuilder modelBuilder)
         {
-            
 
-            modelBuilder.Entity<TeamSeasonLeague>().HasIndex(tsl => new { tsl.TeamId, tsl.LeagueId }).IsUnique();  // One Team cant join in the same league more than one time
+            modelBuilder.Entity<Season>().HasIndex(s => s.Name).IsUnique();
 
+            modelBuilder.Entity<TeamSeasonLeague>().HasIndex(tsl => new { tsl.TeamId, tsl.LeagueId }).IsUnique();
 
-            modelBuilder.Entity<PlayerSeasonTeam>().HasIndex(pst => new { pst.PlayerId, pst.SeasonId }).IsUnique(); // One Player can participate only to one Team in the same Season 
+            modelBuilder.Entity<PlayerSeasonTeam>().HasIndex(pst => new { pst.PlayerId, pst.TeamId, pst.SeasonId, pst.JoinDate }).IsUnique();
 
+            modelBuilder.Entity<Match>().HasIndex(m => new { m.CourtId, m.MatchDate, m.StartTime }).IsUnique();
 
-            modelBuilder.Entity<Match>().HasIndex(m => new { m.CourtId, m.MatchDate, m.StartTime }).IsUnique();  // One Court cant have two games at the same time.
+            modelBuilder.Entity<PlayerStat>().HasIndex(ps => new { ps.PlayerSeasonTeamId, ps.MatchId }).IsUnique();
 
+            modelBuilder.Entity<Court>().HasIndex(c => new { c.Name, c.Location }).IsUnique();
 
-            modelBuilder.Entity<PlayerStat>().HasIndex(ps => new { ps.PlayerSeasonTeamId, ps.MatchId }).IsUnique();  // One Player Stat per game 
-            
+            modelBuilder.Entity<League>().HasIndex(l => new { l.Name, l.City, l.SeasonId }).IsUnique();
 
-            modelBuilder.Entity<TeamStanding>().HasIndex(ts => ts.TeamSeasonLeagueId).IsUnique();  // One TeamSeasonLeague has only one standing
-
+            modelBuilder.Entity<Team>().HasIndex(t => new { t.Name, t.City }).IsUnique();
 
         }
     }

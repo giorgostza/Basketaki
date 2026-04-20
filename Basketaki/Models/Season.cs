@@ -7,19 +7,26 @@ namespace Basketaki.Models
         public int Id { get; set; }
 
         [Required]
+        [MinLength(2)]
         [MaxLength(20)]
-        public string Name { get; set; } = null!; // "2025-2026"
+        [Display(Name = "Season Name")]
+        public string Name { get; set; } = null!; 
+
 
         [Required]
-        public DateOnly StartDate { get; set; }  //   Start: 01/09/2025
+        [DataType(DataType.Date)]
+        [Display(Name = "Start Date")]
+        public DateOnly StartDate { get; set; }  
+
 
         [Required]
-        public DateOnly EndDate { get; set; }   //   End: 30/06/2026
+        [DataType(DataType.Date)]
+        [Display(Name = "End Date")]
+        public DateOnly EndDate { get; set; }   
 
 
-
-        // Navigation
-        public ICollection<League> Leagues { get; set; } = new List<League>();   // One Season has a lot of Leagues 
-        public ICollection<PlayerSeasonTeam> PlayerSeasonTeams { get; set; } = new List<PlayerSeasonTeam>();  //  It shows in which Team each player plays for this particular Season.
+     
+        public ICollection<League> Leagues { get; set; } = new List<League>();   
+        public ICollection<PlayerSeasonTeam> PlayerSeasonTeams { get; set; } = new List<PlayerSeasonTeam>();  
     }
 }

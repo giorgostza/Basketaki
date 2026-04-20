@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Basketaki.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260319142859_InitialCreate")]
+    [Migration("20260415150258_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,6 +25,39 @@ namespace Basketaki.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Basketaki.Models.Coach", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("DateOfBirth")
+                        .HasColumnType("date");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PhotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Coaches");
+                });
+
             modelBuilder.Entity("Basketaki.Models.Court", b =>
                 {
                     b.Property<int>("Id")
@@ -34,8 +67,8 @@ namespace Basketaki.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("Location")
                         .IsRequired()
@@ -48,6 +81,9 @@ namespace Basketaki.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name", "Location")
+                        .IsUnique();
 
                     b.ToTable("Courts");
                 });
@@ -77,6 +113,9 @@ namespace Basketaki.Migrations
 
                     b.HasIndex("SeasonId");
 
+                    b.HasIndex("Name", "City", "SeasonId")
+                        .IsUnique();
+
                     b.ToTable("Leagues");
                 });
 
@@ -88,7 +127,7 @@ namespace Basketaki.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AwayScore")
+                    b.Property<int?>("AwayScore")
                         .HasColumnType("int");
 
                     b.Property<int>("AwayTeamSeasonLeagueId")
@@ -100,7 +139,7 @@ namespace Basketaki.Migrations
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time");
 
-                    b.Property<int>("HomeScore")
+                    b.Property<int?>("HomeScore")
                         .HasColumnType("int");
 
                     b.Property<int>("HomeTeamSeasonLeagueId")
@@ -112,8 +151,8 @@ namespace Basketaki.Migrations
                     b.Property<int>("LeagueId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("MatchDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("MatchDate")
+                        .HasColumnType("date");
 
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time");
@@ -140,13 +179,16 @@ namespace Basketaki.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("MatchId")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<string>("Url")
+                    b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("MatchId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -170,6 +212,45 @@ namespace Basketaki.Migrations
                     b.ToTable("MatchReferees");
                 });
 
+            modelBuilder.Entity("Basketaki.Models.Player", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("DateOfBirth")
+                        .HasColumnType("date");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PhotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Weight")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Players");
+                });
+
             modelBuilder.Entity("Basketaki.Models.PlayerSeasonTeam", b =>
                 {
                     b.Property<int>("Id")
@@ -177,6 +258,15 @@ namespace Basketaki.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("JerseyNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("JoinDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("LeaveDate")
+                        .HasColumnType("date");
 
                     b.Property<int>("PlayerId")
                         .HasColumnType("int");
@@ -193,7 +283,7 @@ namespace Basketaki.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.HasIndex("PlayerId", "SeasonId")
+                    b.HasIndex("PlayerId", "TeamId", "SeasonId", "JoinDate")
                         .IsUnique();
 
                     b.ToTable("PlayerSeasonTeams");
@@ -279,16 +369,16 @@ namespace Basketaki.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
+                    b.Property<DateOnly>("DateOfBirth")
+                        .HasColumnType("date");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<double>("Height")
-                        .HasColumnType("float");
+                    b.Property<int>("Height")
+                        .HasColumnType("int");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -312,18 +402,21 @@ namespace Basketaki.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Seasons");
                 });
@@ -336,20 +429,29 @@ namespace Basketaki.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CoachName")
+                    b.Property<string>("City")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("LogoPhotoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<int?>("CoachId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("PhotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CoachId");
+
+                    b.HasIndex("Name", "City")
+                        .IsUnique();
 
                     b.ToTable("Teams");
                 });
@@ -421,45 +523,6 @@ namespace Basketaki.Migrations
                     b.ToTable("TeamStandings");
                 });
 
-            modelBuilder.Entity("Player", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<double>("Height")
-                        .HasColumnType("float");
-
-                    b.Property<int>("JerseyNumber")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("PlayerPhotoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Weight")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Players");
-                });
-
             modelBuilder.Entity("Basketaki.Models.League", b =>
                 {
                     b.HasOne("Basketaki.Models.Season", "Season")
@@ -520,7 +583,7 @@ namespace Basketaki.Migrations
             modelBuilder.Entity("Basketaki.Models.MatchReferee", b =>
                 {
                     b.HasOne("Basketaki.Models.Match", "Match")
-                        .WithMany()
+                        .WithMany("MatchReferees")
                         .HasForeignKey("MatchId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -538,10 +601,10 @@ namespace Basketaki.Migrations
 
             modelBuilder.Entity("Basketaki.Models.PlayerSeasonTeam", b =>
                 {
-                    b.HasOne("Player", "Player")
+                    b.HasOne("Basketaki.Models.Player", "Player")
                         .WithMany("PlayerSeasonTeams")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Basketaki.Models.Season", "Season")
@@ -572,7 +635,7 @@ namespace Basketaki.Migrations
                         .IsRequired();
 
                     b.HasOne("Basketaki.Models.PlayerSeasonTeam", "PlayerSeasonTeam")
-                        .WithMany()
+                        .WithMany("PlayerStats")
                         .HasForeignKey("PlayerSeasonTeamId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -582,18 +645,28 @@ namespace Basketaki.Migrations
                     b.Navigation("PlayerSeasonTeam");
                 });
 
+            modelBuilder.Entity("Basketaki.Models.Team", b =>
+                {
+                    b.HasOne("Basketaki.Models.Coach", "Coach")
+                        .WithMany("Teams")
+                        .HasForeignKey("CoachId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Coach");
+                });
+
             modelBuilder.Entity("Basketaki.Models.TeamSeasonLeague", b =>
                 {
                     b.HasOne("Basketaki.Models.League", "League")
                         .WithMany("TeamSeasonLeagues")
                         .HasForeignKey("LeagueId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Basketaki.Models.Team", "Team")
                         .WithMany("TeamSeasonLeagues")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("League");
@@ -612,6 +685,11 @@ namespace Basketaki.Migrations
                     b.Navigation("TeamSeasonLeague");
                 });
 
+            modelBuilder.Entity("Basketaki.Models.Coach", b =>
+                {
+                    b.Navigation("Teams");
+                });
+
             modelBuilder.Entity("Basketaki.Models.Court", b =>
                 {
                     b.Navigation("Matches");
@@ -626,8 +704,20 @@ namespace Basketaki.Migrations
 
             modelBuilder.Entity("Basketaki.Models.Match", b =>
                 {
+                    b.Navigation("MatchReferees");
+
                     b.Navigation("Photos");
 
+                    b.Navigation("PlayerStats");
+                });
+
+            modelBuilder.Entity("Basketaki.Models.Player", b =>
+                {
+                    b.Navigation("PlayerSeasonTeams");
+                });
+
+            modelBuilder.Entity("Basketaki.Models.PlayerSeasonTeam", b =>
+                {
                     b.Navigation("PlayerStats");
                 });
 
@@ -655,11 +745,6 @@ namespace Basketaki.Migrations
                     b.Navigation("AwayMatches");
 
                     b.Navigation("HomeMatches");
-                });
-
-            modelBuilder.Entity("Player", b =>
-                {
-                    b.Navigation("PlayerSeasonTeams");
                 });
 #pragma warning restore 612, 618
         }

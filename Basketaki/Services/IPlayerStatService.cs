@@ -16,7 +16,7 @@ namespace Basketaki.Services
 
         Task<SimpleResult> DeleteAsync(int id);
 
-        Task<bool> ExistsAsync(int id);
+        
 
 
     }
