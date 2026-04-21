@@ -1,0 +1,22 @@
+﻿@model Basketaki.ViewModels.MatchPhotoFormViewModel
+
+@{
+    ViewData["Title"] = "Create Match Photo";
+}
+
+<h1 class="mb-4">Create Match Photo</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <partial name="_Form" model="Model" />
+
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-action="Index" asp-route-matchId="@Model.MatchId" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

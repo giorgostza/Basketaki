@@ -1,0 +1,71 @@
+﻿@model IEnumerable<Basketaki.Models.Referee>
+
+@{
+    ViewData["Title"] = "Referees";
+}
+
+<h1 class="mb-4">Referees</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Referee</a>
+</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No referees found.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Date of Birth</th>
+                <th>Height (cm)</th>
+                <th>Photo</th>
+                <th class="text-center" style="width:220px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var referee in Model)
+            {
+                <tr>
+                    <td>@referee.FullName</td>
+                    <td>@referee.DateOfBirth.ToString("dd/MM/yyyy")</td>
+                    <td>@referee.Height</td>
+                    <td>
+                        @if (string.IsNullOrWhiteSpace(referee.PhotoUrl))
+                        {
+                            <span class="text-muted">No photo</span>
+                        }
+                        else
+                        {
+                            <a href="@referee.PhotoUrl" target="_blank">View Photo</a>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <a asp-action="Details" asp-route-id="@referee.Id" class="btn btn-sm btn-info">Details</a>
+                        <a asp-action="Edit" asp-route-id="@referee.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@referee.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

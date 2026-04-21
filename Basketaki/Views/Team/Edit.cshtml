@@ -1,0 +1,24 @@
+﻿@model Basketaki.ViewModels.TeamFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Team";
+}
+
+<h1 class="mb-4">Edit Team</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <partial name="_Form" model="Model" />
+
+            <button type="submit" class="btn btn-warning">Save Changes</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

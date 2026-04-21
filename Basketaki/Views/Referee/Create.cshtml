@@ -1,0 +1,22 @@
+﻿@model Basketaki.Models.Referee
+
+@{
+    ViewData["Title"] = "Create Referee";
+}
+
+<h1 class="mb-4">Create Referee</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <partial name="_Form" model="Model" />
+
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

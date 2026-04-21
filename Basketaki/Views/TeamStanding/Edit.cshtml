@@ -1,0 +1,86 @@
+﻿@model Basketaki.ViewModels.TeamStandingFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Standing";
+    var selectedTeamSeasonLeague = Model.TeamSeasonLeagues
+        .FirstOrDefault(x => x.Value == Model.TeamSeasonLeagueId.ToString())?.Text;
+}
+
+<h1 class="mb-4">Edit Standing</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="TeamSeasonLeagueId" />
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Team League Assignment</label>
+                <input type="text" class="form-control" value="@selectedTeamSeasonLeague" readonly />
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Played" class="form-label"></label>
+                    <input asp-for="Played" type="number" class="form-control" />
+                    <span asp-validation-for="Played" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Wins" class="form-label"></label>
+                    <input asp-for="Wins" type="number" class="form-control" />
+                    <span asp-validation-for="Wins" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Losses" class="form-label"></label>
+                    <input asp-for="Losses" type="number" class="form-control" />
+                    <span asp-validation-for="Losses" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="PointsFor" class="form-label"></label>
+                    <input asp-for="PointsFor" type="number" class="form-control" />
+                    <span asp-validation-for="PointsFor" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="PointsAgainst" class="form-label"></label>
+                    <input asp-for="PointsAgainst" type="number" class="form-control" />
+                    <span asp-validation-for="PointsAgainst" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="LeaguePoints" class="form-label"></label>
+                    <input asp-for="LeaguePoints" type="number" class="form-control" />
+                    <span asp-validation-for="LeaguePoints" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="NoShow" class="form-label"></label>
+                    <input asp-for="NoShow" type="number" class="form-control" />
+                    <span asp-validation-for="NoShow" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="CurrentStreak" class="form-label"></label>
+                    <input asp-for="CurrentStreak" type="number" class="form-control" />
+                    <span asp-validation-for="CurrentStreak" class="text-danger"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-warning">Save Changes</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

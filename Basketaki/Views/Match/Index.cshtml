@@ -1,0 +1,88 @@
+﻿@model IEnumerable<Basketaki.Models.Match>
+
+@{
+    ViewData["Title"] = "Matches";
+}
+
+<h1 class="mb-4">Matches</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Match</a>
+</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No matches found.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Court</th>
+                <th>League</th>
+                <th>Home Team</th>
+                <th>Away Team</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th class="text-center" style="width:220px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var match in Model)
+            {
+                <tr>
+                    <td>@match.MatchDate.ToString("dd/MM/yyyy")</td>
+                    <td>@match.StartTime - @match.EndTime</td>
+                    <td>@match.Court.Name</td>
+                    <td>@match.League.Name</td>
+                    <td>@match.HomeTeamSeasonLeague.Team.Name</td>
+                    <td>@match.AwayTeamSeasonLeague.Team.Name</td>
+                    <td>
+                        @if (match.IsPlayed && match.HomeScore.HasValue && match.AwayScore.HasValue)
+                        {
+                            <span>@match.HomeScore - @match.AwayScore</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not played</span>
+                        }
+                    </td>
+                    <td>
+                        @if (match.IsPlayed)
+                        {
+                            <span class="badge bg-success">Played</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Scheduled</span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <a asp-action="Details" asp-route-id="@match.Id" class="btn btn-sm btn-info">Details</a>
+                        <a asp-action="Edit" asp-route-id="@match.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@match.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

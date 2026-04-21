@@ -1,0 +1,19 @@
+﻿@model Basketaki.ViewModels.TeamSeasonLeagueFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="mb-3">
+    <label asp-for="TeamId" class="form-label"></label>
+    <select asp-for="TeamId" asp-items="Model.Teams" class="form-select">
+        <option value="">-- Select Team --</option>
+    </select>
+    <span asp-validation-for="TeamId" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="LeagueId" class="form-label"></label>
+    <select asp-for="LeagueId" asp-items="Model.Leagues" class="form-select">
+        <option value="">-- Select League --</option>
+    </select>
+    <span asp-validation-for="LeagueId" class="text-danger"></span>
+</div>

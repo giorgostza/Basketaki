@@ -1,0 +1,107 @@
+﻿@model IEnumerable<Basketaki.Models.PlayerStat>
+
+@{
+    ViewData["Title"] = "Player Stats";
+    var match = ViewBag.Match as Basketaki.Models.Match;
+    var matchId = ViewBag.MatchId as int?;
+}
+
+<h1 class="mb-4">Player Stats</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (match != null)
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Match</h5>
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Date</dt>
+                <dd class="col-sm-9">@match.MatchDate.ToString("dd/MM/yyyy")</dd>
+
+                <dt class="col-sm-3">Teams</dt>
+                <dd class="col-sm-9">@match.HomeTeamSeasonLeague.Team.Name vs @match.AwayTeamSeasonLeague.Team.Name</dd>
+
+                <dt class="col-sm-3">Court</dt>
+                <dd class="col-sm-9">@match.Court.Name</dd>
+            </dl>
+        </div>
+    </div>
+}
+
+<p>
+    @if (matchId.HasValue)
+    {
+        <a asp-action="Create" asp-route-matchId="@matchId" class="btn btn-primary">Add Player Stat</a>
+        <a asp-controller="Match" asp-action="Details" asp-route-id="@matchId" class="btn btn-secondary">Back to Match</a>
+    }
+    else
+    {
+        <a asp-action="Create" class="btn btn-primary">Add Player Stat</a>
+    }
+</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No player stats found.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Team</th>
+                <th>Match Date</th>
+                <th>Points</th>
+                <th>Rebounds</th>
+                <th>Assists</th>
+                <th>MVP</th>
+                <th class="text-center" style="width:220px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var stat in Model)
+            {
+                <tr>
+                    <td>@stat.PlayerSeasonTeam.Player.FullName</td>
+                    <td>@stat.PlayerSeasonTeam.Team.Name</td>
+                    <td>@stat.Match.MatchDate.ToString("dd/MM/yyyy")</td>
+                    <td>@stat.Points</td>
+                    <td>@stat.TotalRebounds</td>
+                    <td>@stat.Assists</td>
+                    <td>
+                        @if (stat.IsMVP)
+                        {
+                            <span class="badge bg-warning text-dark">MVP</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No</span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <a asp-action="Details" asp-route-id="@stat.Id" class="btn btn-sm btn-info">Details</a>
+                        <a asp-action="Edit" asp-route-id="@stat.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@stat.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -277,7 +277,7 @@ namespace Basketaki.Controllers
             return courts.Select(c => new SelectListItem
             {
                 Value = c.Id.ToString(),
-                Text = c.Name,
+                Text = $"{c.Name} ({c.Location})",
                 Selected = selectedCourtId.HasValue && c.Id == selectedCourtId.Value
 
             }).ToList();
@@ -310,7 +310,7 @@ namespace Basketaki.Controllers
             return teamSeasonLeagues.Select(tsl => new SelectListItem
             {
                 Value = tsl.Id.ToString(),
-                Text = $"{tsl.Team.Name} - {tsl.League.Name}",
+                Text = $"{tsl.Team.Name} - {tsl.League.Name} ({tsl.League.Season.Name})",
                 Selected = selectedTeamSeasonLeagueId.HasValue && tsl.Id == selectedTeamSeasonLeagueId.Value
 
             }).ToList();

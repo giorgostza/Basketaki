@@ -1,0 +1,72 @@
+﻿@model IEnumerable<Basketaki.Models.TeamStanding>
+
+@{
+    ViewData["Title"] = "Team Standings";
+}
+
+<h1 class="mb-4">Team Standings</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Standing</a>
+</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No standings found.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Team</th>
+                <th>League</th>
+                <th>Played</th>
+                <th>Wins</th>
+                <th>Losses</th>
+                <th>Pts For</th>
+                <th>Pts Against</th>
+                <th>Diff</th>
+                <th>League Pts</th>
+                <th class="text-center" style="width:220px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var standing in Model)
+            {
+                <tr>
+                    <td>@standing.TeamSeasonLeague.Team.Name</td>
+                    <td>@standing.TeamSeasonLeague.League.Name</td>
+                    <td>@standing.Played</td>
+                    <td>@standing.Wins</td>
+                    <td>@standing.Losses</td>
+                    <td>@standing.PointsFor</td>
+                    <td>@standing.PointsAgainst</td>
+                    <td>@standing.PointDifference</td>
+                    <td>@standing.LeaguePoints</td>
+                    <td class="text-center">
+                        <a asp-action="Details" asp-route-id="@standing.Id" class="btn btn-sm btn-info">Details</a>
+                        <a asp-action="Edit" asp-route-id="@standing.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@standing.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

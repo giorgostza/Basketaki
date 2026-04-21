@@ -1,0 +1,87 @@
+﻿@model IEnumerable<Basketaki.Models.MatchReferee>
+
+@{
+    ViewData["Title"] = "Match Referees";
+    var match = ViewBag.Match as Basketaki.Models.Match;
+    var matchId = ViewBag.MatchId as int?;
+}
+
+<h1 class="mb-4">Match Referees</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (match != null)
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Match</h5>
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Date</dt>
+                <dd class="col-sm-9">@match.MatchDate.ToString("dd/MM/yyyy")</dd>
+
+                <dt class="col-sm-3">Time</dt>
+                <dd class="col-sm-9">@match.StartTime - @match.EndTime</dd>
+
+                <dt class="col-sm-3">Teams</dt>
+                <dd class="col-sm-9">
+                    @match.HomeTeamSeasonLeague.Team.Name vs @match.AwayTeamSeasonLeague.Team.Name
+                </dd>
+
+                <dt class="col-sm-3">Court</dt>
+                <dd class="col-sm-9">@match.Court.Name</dd>
+            </dl>
+        </div>
+    </div>
+}
+
+<p>
+    <a asp-action="Create" asp-route-matchId="@matchId" class="btn btn-primary">Assign Referee</a>
+    <a asp-controller="Match" asp-action="Details" asp-route-id="@matchId" class="btn btn-secondary">Back to Match</a>
+</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No referees assigned to this match.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Referee</th>
+                <th class="text-center" style="width:140px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var assignment in Model)
+            {
+                <tr>
+                    <td>@assignment.Referee.FullName</td>
+                    <td class="text-center">
+                        <a asp-action="Delete"
+                           asp-route-matchId="@assignment.MatchId"
+                           asp-route-refereeId="@assignment.RefereeId"
+                           class="btn btn-sm btn-danger">
+                            Remove
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

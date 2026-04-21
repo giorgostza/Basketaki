@@ -169,7 +169,7 @@ namespace Basketaki.Controllers
             return matches.Select(m => new SelectListItem
             {
                 Value = m.Id.ToString(),
-                Text = $"{m.MatchDate:yyyy-MM-dd} - {m.HomeTeamSeasonLeague?.Team?.Name} vs {m.AwayTeamSeasonLeague?.Team?.Name}",
+                Text = $"{m.MatchDate:dd/MM/yyyy} - {m.HomeTeamSeasonLeague?.Team?.Name} vs {m.AwayTeamSeasonLeague?.Team?.Name}",
                 Selected = selectedMatchId.HasValue && m.Id == selectedMatchId.Value
 
             }).ToList();

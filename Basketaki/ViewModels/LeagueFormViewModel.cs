@@ -11,12 +11,14 @@ namespace Basketaki.ViewModels
         [Required]
         [MinLength(3)]
         [MaxLength(100)]
+        [Display(Name = "League Name")]
         public string Name { get; set; } = null!;
 
 
         [Required]
         [MinLength(2)]
         [MaxLength(100)]
+        [Display(Name = "City")]
         public string City { get; set; } = null!;
 
 

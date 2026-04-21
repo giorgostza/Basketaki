@@ -1,0 +1,123 @@
+﻿@model Basketaki.Models.Match
+
+@{
+    ViewData["Title"] = "Match Details";
+}
+
+<h1 class="mb-4">Match Details</h1>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h4 class="card-title mb-4">
+            @Model.HomeTeamSeasonLeague.Team.Name vs @Model.AwayTeamSeasonLeague.Team.Name
+        </h4>
+
+        <dl class="row">
+            <dt class="col-sm-3">Date</dt>
+            <dd class="col-sm-9">@Model.MatchDate.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">Start Time</dt>
+            <dd class="col-sm-9">@Model.StartTime</dd>
+
+            <dt class="col-sm-3">End Time</dt>
+            <dd class="col-sm-9">@Model.EndTime</dd>
+
+            <dt class="col-sm-3">Court</dt>
+            <dd class="col-sm-9">@Model.Court.Name</dd>
+
+            <dt class="col-sm-3">League</dt>
+            <dd class="col-sm-9">@Model.League.Name</dd>
+
+            <dt class="col-sm-3">Home Team</dt>
+            <dd class="col-sm-9">@Model.HomeTeamSeasonLeague.Team.Name</dd>
+
+            <dt class="col-sm-3">Away Team</dt>
+            <dd class="col-sm-9">@Model.AwayTeamSeasonLeague.Team.Name</dd>
+
+            <dt class="col-sm-3">Played</dt>
+            <dd class="col-sm-9">@(Model.IsPlayed ? "Yes" : "No")</dd>
+
+            <dt class="col-sm-3">Score</dt>
+            <dd class="col-sm-9">
+                @if (Model.IsPlayed && Model.HomeScore.HasValue && Model.AwayScore.HasValue)
+                {
+                    <span>@Model.HomeScore - @Model.AwayScore</span>
+                }
+                else
+                {
+                    <span class="text-muted">No score available</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Player Stats Count</dt>
+            <dd class="col-sm-9">@Model.PlayerStats.Count</dd>
+
+            <dt class="col-sm-3">Photos Count</dt>
+            <dd class="col-sm-9">@Model.Photos.Count</dd>
+        </dl>
+    </div>
+</div>
+
+@if (Model.PlayerStats.Any())
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Player Stats</h5>
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var stat in Model.PlayerStats
+                                    .OrderBy(ps => ps.PlayerSeasonTeam.Player.LastName)
+                                    .ThenBy(ps => ps.PlayerSeasonTeam.Player.FirstName))
+                    {
+                        <tr>
+                            <td>@stat.PlayerSeasonTeam.Player.FirstName @stat.PlayerSeasonTeam.Player.LastName</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (Model.Photos.Any())
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Photos</h5>
+
+            <ul class="list-group">
+                @foreach (var photo in Model.Photos)
+                {
+                    <li class="list-group-item">
+                        @* Αν το MatchPhoto έχει Url property *@
+                        @if (!string.IsNullOrWhiteSpace(photo.ImageUrl))
+                        {
+                            <a href="@photo.ImageUrl" target="_blank">@photo.ImageUrl</a>
+                        }
+                        else
+                        {
+                            <span>Photo #@photo.Id</span>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}
+
+<div class="mt-3">
+    <a asp-controller="MatchReferee" asp-action="Index" asp-route-matchId="@Model.Id" class="btn btn-primary">
+        Manage Referees
+    </a>
+    <a asp-controller="MatchPhoto" asp-action="Index" asp-route-matchId="@Model.Id" class="btn btn-info">
+        View Photos
+    </a>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

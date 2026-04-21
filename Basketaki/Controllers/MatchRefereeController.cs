@@ -102,7 +102,7 @@ namespace Basketaki.Controllers
             {
                 ModelState.AddModelError(string.Empty, result.Message ?? "Failed to assign referee.");
 
-                viewModel.MatchDisplayName = $"{match.MatchDate:yyyy-MM-dd} - {match.HomeTeamSeasonLeague?.Team?.Name} vs {match.AwayTeamSeasonLeague?.Team?.Name}";
+                viewModel.MatchDisplayName = $"{match.MatchDate:dd/MM/yyyy} - {match.HomeTeamSeasonLeague?.Team?.Name} vs {match.AwayTeamSeasonLeague?.Team?.Name}";
                 viewModel.Referees = await GetRefereeSelectListAsync(viewModel.RefereeId);
 
                 return View(viewModel);

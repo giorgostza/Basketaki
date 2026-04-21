@@ -1,0 +1,22 @@
+﻿@model Basketaki.ViewModels.LeagueFormViewModel
+
+@{
+    ViewData["Title"] = "Create League";
+}
+
+<h1 class="mb-4">Create League</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <partial name="_Form" model="Model" />
+
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

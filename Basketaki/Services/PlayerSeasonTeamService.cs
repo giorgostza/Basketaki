@@ -33,6 +33,7 @@ namespace Basketaki.Services
             return await _context.PlayerSeasonTeams.AsNoTracking().Include(pst => pst.Player)
                                                                   .Include(pst => pst.Team)
                                                                   .Include(pst => pst.Season)
+                                                                  .Include(pst => pst.PlayerStats)
                                                                   .FirstOrDefaultAsync(pst => pst.Id == id);
 
         }

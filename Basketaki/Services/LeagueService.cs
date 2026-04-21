@@ -31,6 +31,7 @@ namespace Basketaki.Services
             return await _context.Leagues.AsNoTracking().Include(l => l.Season)
                                                         .Include(l => l.TeamSeasonLeagues)
                                                                 .ThenInclude(tsl => tsl.Team)
+                                                        .Include(l => l.Matches)
                                                         .FirstOrDefaultAsync(l => l.Id == id);
 
         }
@@ -148,7 +149,8 @@ namespace Basketaki.Services
             var trimmedCity = league.City.Trim();
 
 
-            var duplicate = await _context.Leagues.AnyAsync(l => l.Name == trimmedName &&
+            var duplicate = await _context.Leagues.AnyAsync(l => l.Id != league.Id && 
+                                                                 l.Name == trimmedName &&
                                                                  l.City == trimmedCity &&
                                                                  l.SeasonId == league.SeasonId);
 

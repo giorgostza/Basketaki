@@ -232,7 +232,7 @@ namespace Basketaki.Controllers
             viewModel.TeamSeasonLeagues = teamSeasonLeagues.Select(tsl => new SelectListItem
             {
                 Value = tsl.Id.ToString(),
-                Text = $"{tsl.Team.Name} - {tsl.League.Name} ({tsl.League.Season.Name})",
+                Text = $"{tsl.Team.Name} - {tsl.League.Name} ({tsl.League.City}, {tsl.League.Season.Name})",
                 Selected = tsl.Id == viewModel.TeamSeasonLeagueId
 
             }).ToList();

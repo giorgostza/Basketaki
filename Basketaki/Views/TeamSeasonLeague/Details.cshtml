@@ -1,0 +1,31 @@
+﻿@model Basketaki.Models.TeamSeasonLeague
+
+@{
+    ViewData["Title"] = "Assignment Details";
+}
+
+<h1 class="mb-4">Assignment Details</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h4 class="card-title mb-4">Team League Assignment</h4>
+
+        <dl class="row">
+            <dt class="col-sm-3">Team</dt>
+            <dd class="col-sm-9">@Model.Team.Name</dd>
+
+            <dt class="col-sm-3">League</dt>
+            <dd class="col-sm-9">@Model.League.Name</dd>
+
+            <dt class="col-sm-3">League City</dt>
+            <dd class="col-sm-9">@Model.League.City</dd>
+
+            <dt class="col-sm-3">Season</dt>
+            <dd class="col-sm-9">@Model.League.Season.Name</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

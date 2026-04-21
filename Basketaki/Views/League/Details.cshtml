@@ -1,0 +1,57 @@
+﻿@model Basketaki.Models.League
+
+@{
+    ViewData["Title"] = "League Details";
+}
+
+<h1 class="mb-4">League Details</h1>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h4 class="card-title mb-4">@Model.Name</h4>
+
+        <dl class="row">
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+
+            <dt class="col-sm-3">City</dt>
+            <dd class="col-sm-9">@Model.City</dd>
+
+            <dt class="col-sm-3">Season</dt>
+            <dd class="col-sm-9">@Model.Season.Name</dd>
+
+            <dt class="col-sm-3">Assigned Teams</dt>
+            <dd class="col-sm-9">@Model.TeamSeasonLeagues.Count</dd>
+        </dl>
+    </div>
+</div>
+
+@if (Model.TeamSeasonLeagues.Any())
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Teams in this League</h5>
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Team</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.TeamSeasonLeagues.OrderBy(tsl => tsl.Team.Name))
+                    {
+                        <tr>
+                            <td>@item.Team.Name</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

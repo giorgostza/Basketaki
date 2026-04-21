@@ -299,7 +299,7 @@ namespace Basketaki.Controllers
             return matches.Select(m => new SelectListItem
             {
                 Value = m.Id.ToString(),
-                Text = $"{m.MatchDate:yyyy-MM-dd} - {m.HomeTeamSeasonLeague?.Team?.Name} vs {m.AwayTeamSeasonLeague?.Team?.Name}",
+                Text = $"{m.MatchDate:dd/MM/yyyy} - {m.HomeTeamSeasonLeague?.Team?.Name} vs {m.AwayTeamSeasonLeague?.Team?.Name}",
                 Selected = selectedMatchId.HasValue && m.Id == selectedMatchId.Value
 
             }).ToList();
@@ -313,7 +313,7 @@ namespace Basketaki.Controllers
             return playerSeasonTeams.Select(pst => new SelectListItem
             {
                 Value = pst.Id.ToString(),
-                Text = $"{pst.Player.FullName} - {pst.Team.Name} ({pst.Season.Name})",
+                Text = $"{pst.Player.FullName} - {pst.Team.Name} #{pst.JerseyNumber} ({pst.Season.Name})",
                 Selected = selectedPlayerSeasonTeamId.HasValue && pst.Id == selectedPlayerSeasonTeamId.Value
 
             }).ToList();

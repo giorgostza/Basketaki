@@ -263,7 +263,7 @@ namespace Basketaki.Controllers
             return teams.Select(t => new SelectListItem
             {
                 Value = t.Id.ToString(),
-                Text = t.Name,
+                Text = $"{t.Name} ({t.City})",
                 Selected = selectedTeamId.HasValue && t.Id == selectedTeamId.Value
 
             }).ToList();

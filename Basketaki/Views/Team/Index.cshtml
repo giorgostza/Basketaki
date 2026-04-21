@@ -1,0 +1,73 @@
+﻿@model IEnumerable<Basketaki.Models.Team>
+
+@{
+    ViewData["Title"] = "Teams";
+}
+
+<h1 class="mb-4">Teams</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Team</a>
+</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No teams found.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>City</th>
+                <th>Coach</th>
+                <th>Photo</th>
+                <th class="text-center" style="width: 220px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var team in Model)
+            {
+                <tr>
+                    <td>@team.Name</td>
+                    <td>@team.City</td>
+                    <td>
+                        @(team.Coach != null ? team.Coach.FullName : "No Coach")
+                    </td>
+                    <td>
+                        @if (string.IsNullOrWhiteSpace(team.PhotoUrl))
+                        {
+                            <span class="text-muted">No photo</span>
+                        }
+                        else
+                        {
+                            <a href="@team.PhotoUrl" target="_blank">View Photo</a>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <a asp-action="Details" asp-route-id="@team.Id" class="btn btn-sm btn-info">Details</a>
+                        <a asp-action="Edit" asp-route-id="@team.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@team.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

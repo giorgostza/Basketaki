@@ -1,0 +1,115 @@
+﻿@model Basketaki.Models.Team
+
+@{
+    ViewData["Title"] = "Team Details";
+}
+
+<h1 class="mb-4">Team Details</h1>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h4 class="card-title mb-4">@Model.Name</h4>
+
+        <dl class="row">
+            <dt class="col-sm-3">Name</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+
+            <dt class="col-sm-3">City</dt>
+            <dd class="col-sm-9">@Model.City</dd>
+
+            <dt class="col-sm-3">Coach</dt>
+            <dd class="col-sm-9">
+                @(Model.Coach != null ? Model.Coach.FullName : "No Coach")
+            </dd>
+
+            <dt class="col-sm-3">Photo</dt>
+            <dd class="col-sm-9">
+                @if (string.IsNullOrWhiteSpace(Model.PhotoUrl))
+                {
+                    <span class="text-muted">No photo</span>
+                }
+                else
+                {
+                    <a href="@Model.PhotoUrl" target="_blank">Open Photo</a>
+                }
+            </dd>
+
+            <dt class="col-sm-3">League Participations</dt>
+            <dd class="col-sm-9">@Model.TeamSeasonLeagues.Count</dd>
+
+            <dt class="col-sm-3">Player Registrations</dt>
+            <dd class="col-sm-9">@Model.PlayerSeasonTeams.Count</dd>
+        </dl>
+    </div>
+</div>
+
+@if (Model.TeamSeasonLeagues.Any())
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Leagues</h5>
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>League</th>
+                        <th>City</th>
+                        <th>Season</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var participation in Model.TeamSeasonLeagues
+                                    .OrderBy(tsl => tsl.League.Name)
+                                    .ThenBy(tsl => tsl.League.Season.Name))
+                    {
+                        <tr>
+                            <td>@participation.League.Name</td>
+                            <td>@participation.League.City</td>
+                            <td>@participation.League.Season.Name</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (Model.PlayerSeasonTeams.Any())
+{
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Players</h5>
+
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Join Date</th>
+                        <th>Leave Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var playerTeam in Model.PlayerSeasonTeams
+                                    .OrderBy(pst => pst.Player.LastName)
+                                    .ThenBy(pst => pst.Player.FirstName))
+                    {
+                        <tr>
+                            <td>@playerTeam.Player.FirstName @playerTeam.Player.LastName</td>
+                            <td>@playerTeam.JoinDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @(playerTeam.LeaveDate.HasValue
+                                                        ? playerTeam.LeaveDate.Value.ToString("dd/MM/yyyy")
+                                                        : "Still Active")
+                    </td>
+                </tr>
+                                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

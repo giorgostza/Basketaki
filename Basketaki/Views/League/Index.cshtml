@@ -1,0 +1,60 @@
+﻿@model IEnumerable<Basketaki.Models.League>
+
+@{
+    ViewData["Title"] = "Leagues";
+}
+
+<h1 class="mb-4">Leagues</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New League</a>
+</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No leagues found.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>City</th>
+                <th>Season</th>
+                <th class="text-center" style="width:220px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var league in Model)
+            {
+                <tr>
+                    <td>@league.Name</td>
+                    <td>@league.City</td>
+                    <td>@league.Season.Name</td>
+                    <td class="text-center">
+                        <a asp-action="Details" asp-route-id="@league.Id" class="btn btn-sm btn-info">Details</a>
+                        <a asp-action="Edit" asp-route-id="@league.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@league.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

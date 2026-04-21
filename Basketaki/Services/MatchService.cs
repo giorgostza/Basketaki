@@ -40,6 +40,7 @@ namespace Basketaki.Services
                                                             .ThenInclude(ps => ps.PlayerSeasonTeam)
                                                             .ThenInclude(pst => pst.Player)
                                                         .Include(m => m.Photos)
+                                                        .Include(m => m.MatchReferees)
                                                         .FirstOrDefaultAsync(m => m.Id == id);
 
         }

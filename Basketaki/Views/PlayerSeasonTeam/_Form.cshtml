@@ -1,0 +1,53 @@
+﻿@model Basketaki.ViewModels.PlayerSeasonTeamFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label asp-for="PlayerId" class="form-label"></label>
+        <select asp-for="PlayerId" asp-items="Model.Players" class="form-select">
+            <option value="">-- Select Player --</option>
+        </select>
+        <span asp-validation-for="PlayerId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label asp-for="TeamId" class="form-label"></label>
+        <select asp-for="TeamId" asp-items="Model.Teams" class="form-select">
+            <option value="">-- Select Team --</option>
+        </select>
+        <span asp-validation-for="TeamId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label asp-for="SeasonId" class="form-label"></label>
+        <select asp-for="SeasonId" asp-items="Model.Seasons" class="form-select">
+            <option value="">-- Select Season --</option>
+        </select>
+        <span asp-validation-for="SeasonId" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label asp-for="JerseyNumber" class="form-label"></label>
+        <input asp-for="JerseyNumber" type="number" class="form-control" />
+        <span asp-validation-for="JerseyNumber" class="text-danger"></span>
+    </div>
+
+    <div class="form-text">
+        Jersey number must be unique within the same team and period.
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label asp-for="JoinDate" class="form-label"></label>
+        <input asp-for="JoinDate" type="date" class="form-control" />
+        <span asp-validation-for="JoinDate" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label asp-for="LeaveDate" class="form-label"></label>
+        <input asp-for="LeaveDate" type="date" class="form-control" />
+        <span asp-validation-for="LeaveDate" class="text-danger"></span>
+    </div>
+</div>

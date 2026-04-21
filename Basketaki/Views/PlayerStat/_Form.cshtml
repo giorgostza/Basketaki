@@ -1,0 +1,130 @@
+﻿@model Basketaki.ViewModels.PlayerStatFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="MatchId" class="form-label"></label>
+        <select asp-for="MatchId" asp-items="Model.Matches" class="form-select">
+            <option value="">-- Select Match --</option>
+        </select>
+        <span asp-validation-for="MatchId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label asp-for="PlayerSeasonTeamId" class="form-label"></label>
+        <select asp-for="PlayerSeasonTeamId" asp-items="Model.PlayerSeasonTeams" class="form-select">
+            <option value="">-- Select Player Assignment --</option>
+        </select>
+        <span asp-validation-for="PlayerSeasonTeamId" class="text-danger"></span>
+    </div>
+</div>
+
+<h5 class="mt-4 mb-3">Basic Stats</h5>
+
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <label asp-for="Points" class="form-label"></label>
+        <input asp-for="Points" type="number" class="form-control" />
+        <span asp-validation-for="Points" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="Assists" class="form-label"></label>
+        <input asp-for="Assists" type="number" class="form-control" />
+        <span asp-validation-for="Assists" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="Steals" class="form-label"></label>
+        <input asp-for="Steals" type="number" class="form-control" />
+        <span asp-validation-for="Steals" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="Blocks" class="form-label"></label>
+        <input asp-for="Blocks" type="number" class="form-control" />
+        <span asp-validation-for="Blocks" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <label asp-for="OffensiveRebounds" class="form-label"></label>
+        <input asp-for="OffensiveRebounds" type="number" class="form-control" />
+        <span asp-validation-for="OffensiveRebounds" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="DefensiveRebounds" class="form-label"></label>
+        <input asp-for="DefensiveRebounds" type="number" class="form-control" />
+        <span asp-validation-for="DefensiveRebounds" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="Fouls" class="form-label"></label>
+        <input asp-for="Fouls" type="number" class="form-control" />
+        <span asp-validation-for="Fouls" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="MinutesPlayed" class="form-label"></label>
+        <input asp-for="MinutesPlayed" type="number" class="form-control" />
+        <span asp-validation-for="MinutesPlayed" class="text-danger"></span>
+    </div>
+</div>
+
+<h5 class="mt-4 mb-3">Shooting Stats</h5>
+
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <label asp-for="FreeThrowsMade" class="form-label"></label>
+        <input asp-for="FreeThrowsMade" type="number" class="form-control" />
+        <span asp-validation-for="FreeThrowsMade" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="FreeThrowsAttempted" class="form-label"></label>
+        <input asp-for="FreeThrowsAttempted" type="number" class="form-control" />
+        <span asp-validation-for="FreeThrowsAttempted" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="TwoPointsMade" class="form-label"></label>
+        <input asp-for="TwoPointsMade" type="number" class="form-control" />
+        <span asp-validation-for="TwoPointsMade" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="TwoPointsAttempted" class="form-label"></label>
+        <input asp-for="TwoPointsAttempted" type="number" class="form-control" />
+        <span asp-validation-for="TwoPointsAttempted" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <label asp-for="ThreePointsMade" class="form-label"></label>
+        <input asp-for="ThreePointsMade" type="number" class="form-control" />
+        <span asp-validation-for="ThreePointsMade" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="ThreePointsAttempted" class="form-label"></label>
+        <input asp-for="ThreePointsAttempted" type="number" class="form-control" />
+        <span asp-validation-for="ThreePointsAttempted" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label asp-for="SuspensionGames" class="form-label"></label>
+        <input asp-for="SuspensionGames" type="number" class="form-control" />
+        <span asp-validation-for="SuspensionGames" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3 mb-3 d-flex align-items-end">
+        <div class="form-check mb-2">
+            <input asp-for="IsMVP" class="form-check-input" />
+            <label asp-for="IsMVP" class="form-check-label"></label>
+        </div>
+    </div>
+</div>

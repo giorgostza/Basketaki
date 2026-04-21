@@ -1,0 +1,75 @@
+﻿@model IEnumerable<Basketaki.Models.Player>
+
+@{
+    ViewData["Title"] = "Players";
+}
+
+<h1 class="mb-4">Players</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Player</a>
+</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No players found.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Date of Birth</th>
+                <th>Height</th>
+                <th>Weight</th>
+                <th>Position</th>
+                <th>Photo</th>
+                <th class="text-center" style="width:220px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var player in Model)
+            {
+                <tr>
+                    <td>@player.FullName</td>
+                    <td>@player.DateOfBirth.ToString("dd/MM/yyyy")</td>
+                    <td>@player.Height cm</td>
+                    <td>@player.Weight kg</td>
+                    <td>@player.Position</td>
+                    <td>
+                        @if (string.IsNullOrWhiteSpace(player.PhotoUrl))
+                        {
+                            <span class="text-muted">No photo</span>
+                        }
+                        else
+                        {
+                            <a href="@player.PhotoUrl" target="_blank">View Photo</a>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <a asp-action="Details" asp-route-id="@player.Id" class="btn btn-sm btn-info">Details</a>
+                        <a asp-action="Edit" asp-route-id="@player.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@player.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,18 @@
+﻿@model Basketaki.ViewModels.MatchRefereeFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<input type="hidden" asp-for="MatchId" />
+
+<div class="mb-3">
+    <label class="form-label">Match</label>
+    <input type="text" class="form-control" value="@Model.MatchDisplayName" readonly />
+</div>
+
+<div class="mb-3">
+    <label asp-for="RefereeId" class="form-label"></label>
+    <select asp-for="RefereeId" asp-items="Model.Referees" class="form-select">
+        <option value="">-- Select Referee --</option>
+    </select>
+    <span asp-validation-for="RefereeId" class="text-danger"></span>
+</div>

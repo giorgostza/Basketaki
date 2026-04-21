@@ -1,0 +1,70 @@
+﻿@model IEnumerable<Basketaki.Models.PlayerSeasonTeam>
+
+@{
+    ViewData["Title"] = "Player Assignments";
+}
+
+<h1 class="mb-4">Player Assignments</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Assignment</a>
+</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No player assignments found.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Team</th>
+                <th>Season</th>
+                <th>Jersey</th>
+                <th>Join Date</th>
+                <th>Leave Date</th>
+                <th class="text-center" style="width:220px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var assignment in Model)
+            {
+                <tr>
+                    <td>@assignment.Player.FullName</td>
+                    <td>@assignment.Team.Name</td>
+                    <td>@assignment.Season.Name</td>
+                    <td>#@assignment.JerseyNumber</td>
+                    <td>@assignment.JoinDate.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        @(assignment.LeaveDate.HasValue
+                                        ? assignment.LeaveDate.Value.ToString("dd/MM/yyyy")
+                                        : "Still Active")
+            </td>
+            <td class="text-center">
+                <a asp-action="Details" asp-route-id="@assignment.Id" class="btn btn-sm btn-info">Details</a>
+                <a asp-action="Edit" asp-route-id="@assignment.Id" class="btn btn-sm btn-warning">Edit</a>
+                <a asp-action="Delete" asp-route-id="@assignment.Id" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+                }
+        </tbody>
+    </table>
+}

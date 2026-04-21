@@ -1,0 +1,78 @@
+﻿@model Basketaki.ViewModels.MatchFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label asp-for="MatchDate" class="form-label"></label>
+        <input asp-for="MatchDate" type="date" class="form-control" />
+        <span asp-validation-for="MatchDate" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label asp-for="StartTime" class="form-label"></label>
+        <input asp-for="StartTime" type="time" class="form-control" />
+        <span asp-validation-for="StartTime" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label asp-for="EndTime" class="form-label"></label>
+        <input asp-for="EndTime" type="time" class="form-control" />
+        <span asp-validation-for="EndTime" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="CourtId" class="form-label"></label>
+        <select asp-for="CourtId" asp-items="Model.Courts" class="form-select">
+            <option value="">-- Select Court --</option>
+        </select>
+        <span asp-validation-for="CourtId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label asp-for="LeagueId" class="form-label"></label>
+        <select asp-for="LeagueId" asp-items="Model.Leagues" class="form-select">
+            <option value="">-- Select League --</option>
+        </select>
+        <span asp-validation-for="LeagueId" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="HomeTeamSeasonLeagueId" class="form-label"></label>
+        <select asp-for="HomeTeamSeasonLeagueId" asp-items="Model.HomeTeams" class="form-select">
+            <option value="">-- Select Home Team --</option>
+        </select>
+        <span asp-validation-for="HomeTeamSeasonLeagueId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label asp-for="AwayTeamSeasonLeagueId" class="form-label"></label>
+        <select asp-for="AwayTeamSeasonLeagueId" asp-items="Model.AwayTeams" class="form-select">
+            <option value="">-- Select Away Team --</option>
+        </select>
+        <span asp-validation-for="AwayTeamSeasonLeagueId" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="form-check mb-3">
+    <input asp-for="IsPlayed" class="form-check-input" />
+    <label asp-for="IsPlayed" class="form-check-label"></label>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="HomeScore" class="form-label"></label>
+        <input asp-for="HomeScore" type="number" class="form-control" />
+        <span asp-validation-for="HomeScore" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label asp-for="AwayScore" class="form-label"></label>
+        <input asp-for="AwayScore" type="number" class="form-control" />
+        <span asp-validation-for="AwayScore" class="text-danger"></span>
+    </div>
+</div>

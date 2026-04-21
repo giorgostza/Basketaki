@@ -1,0 +1,55 @@
+﻿@model Basketaki.Models.TeamStanding
+
+@{
+    ViewData["Title"] = "Standing Details";
+}
+
+<h1 class="mb-4">Standing Details</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h4 class="card-title mb-4">
+            @Model.TeamSeasonLeague.Team.Name - @Model.TeamSeasonLeague.League.Name
+        </h4>
+
+        <dl class="row">
+            <dt class="col-sm-3">Team</dt>
+            <dd class="col-sm-9">@Model.TeamSeasonLeague.Team.Name</dd>
+
+            <dt class="col-sm-3">League</dt>
+            <dd class="col-sm-9">@Model.TeamSeasonLeague.League.Name</dd>
+
+            <dt class="col-sm-3">Played</dt>
+            <dd class="col-sm-9">@Model.Played</dd>
+
+            <dt class="col-sm-3">Wins</dt>
+            <dd class="col-sm-9">@Model.Wins</dd>
+
+            <dt class="col-sm-3">Losses</dt>
+            <dd class="col-sm-9">@Model.Losses</dd>
+
+            <dt class="col-sm-3">Points For</dt>
+            <dd class="col-sm-9">@Model.PointsFor</dd>
+
+            <dt class="col-sm-3">Points Against</dt>
+            <dd class="col-sm-9">@Model.PointsAgainst</dd>
+
+            <dt class="col-sm-3">Point Difference</dt>
+            <dd class="col-sm-9">@Model.PointDifference</dd>
+
+            <dt class="col-sm-3">League Points</dt>
+            <dd class="col-sm-9">@Model.LeaguePoints</dd>
+
+            <dt class="col-sm-3">No Show</dt>
+            <dd class="col-sm-9">@Model.NoShow</dd>
+
+            <dt class="col-sm-3">Current Streak</dt>
+            <dd class="col-sm-9">@Model.CurrentStreak</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

@@ -1,0 +1,80 @@
+﻿@model IEnumerable<Basketaki.Models.MatchPhoto>
+
+@{
+    ViewData["Title"] = "Match Photos";
+    var matchId = ViewBag.MatchId as int?;
+}
+
+<h1 class="mb-4">Match Photos</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="mb-3">
+    @if (matchId.HasValue)
+    {
+        <a asp-action="Create" asp-route-matchId="@matchId" class="btn btn-primary">Add Photo</a>
+    }
+    else
+    {
+        <a asp-action="Create" class="btn btn-primary">Add Photo</a>
+    }
+</div>
+
+@if (!matchId.HasValue)
+{
+    <div class="alert alert-info">
+        No match selected. Choose a match when creating a photo, or open this page with a matchId.
+    </div>
+}
+else if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No photos found for this match.
+    </div>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Preview</th>
+                <th>Image URL</th>
+                <th>Created At</th>
+                <th class="text-center" style="width:180px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var photo in Model)
+            {
+                <tr>
+                    <td style="width: 140px;">
+                        <img src="@photo.ImageUrl"
+                             alt="Match Photo"
+                             class="img-fluid rounded"
+                             style="max-height:100px;" />
+                    </td>
+                    <td>
+                        <a href="@photo.ImageUrl" target="_blank">@photo.ImageUrl</a>
+                    </td>
+                    <td>@photo.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td class="text-center">
+                        <a asp-action="Details" asp-route-id="@photo.Id" class="btn btn-sm btn-info">Details</a>
+                        <a asp-action="Delete" asp-route-id="@photo.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

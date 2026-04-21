@@ -1,0 +1,28 @@
+﻿@model Basketaki.ViewModels.PlayerSeasonTeamFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Player Assignment";
+}
+
+<h1 class="mb-4">Edit Player Assignment</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <partial name="_Form" model="Model" />
+
+            <div class="form-text mb-3">
+                Join and leave dates must be within the selected season.
+            </div>
+
+            <button type="submit" class="btn btn-warning">Save Changes</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

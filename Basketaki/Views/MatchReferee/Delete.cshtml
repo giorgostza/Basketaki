@@ -1,0 +1,52 @@
+﻿@model Basketaki.Models.MatchReferee
+
+@{
+    ViewData["Title"] = "Remove Referee";
+    var match = ViewBag.Match as Basketaki.Models.Match;
+}
+
+<h1 class="mb-4">Remove Referee</h1>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="card border-danger shadow-sm">
+    <div class="card-body">
+        <h4 class="text-danger">Are you sure you want to remove this referee from the match?</h4>
+        <hr />
+
+        <dl class="row">
+            <dt class="col-sm-3">Referee</dt>
+            <dd class="col-sm-9">@Model.Referee.FullName</dd>
+
+            @if (match != null)
+            {
+                <dt class="col-sm-3">Match Date</dt>
+                <dd class="col-sm-9">@match.MatchDate.ToString("dd/MM/yyyy")</dd>
+
+                <dt class="col-sm-3">Time</dt>
+                <dd class="col-sm-9">@match.StartTime - @match.EndTime</dd>
+
+                <dt class="col-sm-3">Teams</dt>
+                <dd class="col-sm-9">
+                    @match.HomeTeamSeasonLeague.Team.Name vs @match.AwayTeamSeasonLeague.Team.Name
+                </dd>
+
+                <dt class="col-sm-3">Court</dt>
+                <dd class="col-sm-9">@match.Court.Name</dd>
+            }
+        </dl>
+
+        <form asp-action="Delete" method="post">
+            <input type="hidden" name="matchId" value="@Model.MatchId" />
+            <input type="hidden" name="refereeId" value="@Model.RefereeId" />
+
+            <button type="submit" class="btn btn-danger">Remove</button>
+            <a asp-action="Index" asp-route-matchId="@Model.MatchId" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
