@@ -6,12 +6,7 @@
 
 <h1 class="mb-4">Leagues</h1>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["SuccessMessage"]
-    </div>
-}
+<partial name="_Alerts" />
 
 @if (TempData["ErrorMessage"] != null)
 {

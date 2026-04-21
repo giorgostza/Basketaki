@@ -8,19 +8,7 @@
 
 <h1 class="mb-4">Match Referees</h1>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["SuccessMessage"]
-    </div>
-}
-
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["ErrorMessage"]
-    </div>
-}
+<partial name="_Alerts" />
 
 @if (match != null)
 {

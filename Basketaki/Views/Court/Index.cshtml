@@ -6,19 +6,9 @@
 
 <h1 class="mb-4">Courts</h1>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["SuccessMessage"]
-    </div>
-}
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["ErrorMessage"]
-    </div>
-}
+<partial name="_Alerts" />
+
 
 <p>
     <a asp-action="Create" class="btn btn-primary">Create New Court</a>

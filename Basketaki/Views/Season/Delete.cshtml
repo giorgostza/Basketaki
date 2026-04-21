@@ -6,12 +6,7 @@
 
 <h1 class="mb-4">Delete Season</h1>
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["ErrorMessage"]
-    </div>
-}
+<partial name="_Alerts" />
 
 <div class="card border-danger shadow-sm">
     <div class="card-body">
@@ -21,9 +16,9 @@
         <!-- ✅ WARNING ΕΔΩ -->
         @if (Model.Leagues.Any() || Model.PlayerSeasonTeams.Any())
         {
-            <div class="alert alert-warning">
-                This season is linked with leagues or player registrations and may not be deletable.
-            </div>
+
+            <partial name="_DeleteWarning" model='"This season is linked with leagues or player registrations and may not be deletable."' />
+           
         }
 
         <dl class="row">

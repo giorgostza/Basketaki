@@ -7,12 +7,7 @@
 
 <h1 class="mb-4">Remove Referee</h1>
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["ErrorMessage"]
-    </div>
-}
+<partial name="_Alerts" />
 
 <div class="card border-danger shadow-sm">
     <div class="card-body">

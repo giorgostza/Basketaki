@@ -6,12 +6,7 @@
 
 <h1 class="mb-4">Delete Match</h1>
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["ErrorMessage"]
-    </div>
-}
+<partial name="_Alerts" />
 
 <div class="card border-danger shadow-sm">
     <div class="card-body">
@@ -20,9 +15,9 @@
 
         @if (Model.PlayerStats.Any() || Model.Photos.Any() || Model.MatchReferees.Any() )
         {
-            <div class="alert alert-warning">
-                This match is linked with related data and may not be deletable.
-            </div>
+
+            <partial name="_DeleteWarning" model='"This match is linked with related data and may not be deletable."' />
+            
         }
 
         <dl class="row">
