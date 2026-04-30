@@ -86,7 +86,36 @@ namespace Basketaki.Services
 
             }
 
-            return await CreateWithProperChecksAsync(playerStat, playerSeasonTeam, match);
+            var matchValidationResult = await ValidatePlayerCanHaveStatsForMatchAsync(playerSeasonTeam, match);
+
+            if (!matchValidationResult.Success)
+            {
+                return matchValidationResult;
+            }
+
+            var exists = await _context.PlayerStats
+                .AsNoTracking()
+                .AnyAsync(ps =>
+                    ps.PlayerSeasonTeamId == playerStat.PlayerSeasonTeamId &&
+                    ps.MatchId == playerStat.MatchId);
+
+            if (exists)
+            {
+                return SimpleResult.Fail("Stats already exist for this player in this match.");
+            }
+
+            _context.PlayerStats.Add(playerStat);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                return SimpleResult.Ok("Player stats created successfully.");
+            }
+            catch (DbUpdateException)
+            {
+                return SimpleResult.Fail("Unable to create player stats.");
+            }
 
         }
 
@@ -133,24 +162,13 @@ namespace Basketaki.Services
             }
 
 
-            var homeTeamSeasonLeague = await _context.TeamSeasonLeagues.AsNoTracking().FirstOrDefaultAsync(tsl => tsl.Id == match.HomeTeamSeasonLeagueId);
-            var awayTeamSeasonLeague = await _context.TeamSeasonLeagues.AsNoTracking().FirstOrDefaultAsync(tsl => tsl.Id == match.AwayTeamSeasonLeagueId);
 
-            if (homeTeamSeasonLeague == null || awayTeamSeasonLeague == null)
+            var matchValidationResult = await ValidatePlayerCanHaveStatsForMatchAsync(playerSeasonTeam, match);
+
+            if (!matchValidationResult.Success)
             {
 
-                return SimpleResult.Fail("Match teams not found.");
-
-            }
-
-
-            var belongsToMatch = playerSeasonTeam.TeamId == homeTeamSeasonLeague.TeamId ||
-                                 playerSeasonTeam.TeamId == awayTeamSeasonLeague.TeamId;
-
-            if (!belongsToMatch)
-            {
-
-                return SimpleResult.Fail("Player must belong to one of the teams participating in the match.");
+                return matchValidationResult;
 
             }
 
@@ -245,13 +263,46 @@ namespace Basketaki.Services
 
 
 
-        private async Task<SimpleResult> CreateWithProperChecksAsync(PlayerStat playerStat, PlayerSeasonTeam playerSeasonTeam, Match match)
+        private async Task<SimpleResult> ValidatePlayerCanHaveStatsForMatchAsync(PlayerSeasonTeam playerSeasonTeam, Match match)
         {
-            var homeTeamSeasonLeague = await _context.TeamSeasonLeagues.AsNoTracking()
-                                                                       .FirstOrDefaultAsync(tsl => tsl.Id == match.HomeTeamSeasonLeagueId);
 
-            var awayTeamSeasonLeague = await _context.TeamSeasonLeagues.AsNoTracking()
-                                                                       .FirstOrDefaultAsync(tsl => tsl.Id == match.AwayTeamSeasonLeagueId);
+            var league = await _context.Leagues.AsNoTracking().FirstOrDefaultAsync(l => l.Id == match.LeagueId);
+
+            if (league == null)
+            {
+
+                return SimpleResult.Fail("League not found.");
+
+            }
+
+
+            if (playerSeasonTeam.SeasonId != league.SeasonId)
+            {
+
+                return SimpleResult.Fail("Player assignment season must match the match league season.");
+
+            }
+
+
+            if (playerSeasonTeam.JoinDate > match.MatchDate)
+            {
+
+                return SimpleResult.Fail("Player was not active for this team on the match date.");
+
+            }
+
+
+            if (playerSeasonTeam.LeaveDate.HasValue && playerSeasonTeam.LeaveDate.Value < match.MatchDate)
+            {
+
+                return SimpleResult.Fail("Player was not active for this team on the match date.");
+
+            }
+
+
+
+            var homeTeamSeasonLeague = await _context.TeamSeasonLeagues.AsNoTracking().FirstOrDefaultAsync(tsl => tsl.Id == match.HomeTeamSeasonLeagueId);
+            var awayTeamSeasonLeague = await _context.TeamSeasonLeagues.AsNoTracking().FirstOrDefaultAsync(tsl => tsl.Id == match.AwayTeamSeasonLeagueId);
 
             if (homeTeamSeasonLeague == null || awayTeamSeasonLeague == null)
             {
@@ -261,8 +312,8 @@ namespace Basketaki.Services
             }
 
 
-            var belongsToMatch = playerSeasonTeam.TeamId == homeTeamSeasonLeague.TeamId ||
-                                 playerSeasonTeam.TeamId == awayTeamSeasonLeague.TeamId;
+
+            var belongsToMatch =  playerSeasonTeam.TeamId == homeTeamSeasonLeague.TeamId || playerSeasonTeam.TeamId == awayTeamSeasonLeague.TeamId;
 
             if (!belongsToMatch)
             {
@@ -272,35 +323,8 @@ namespace Basketaki.Services
             }
 
 
-            var exists = await _context.PlayerStats.AsNoTracking()
-                                                   .AnyAsync(ps =>
-                                                       ps.PlayerSeasonTeamId == playerStat.PlayerSeasonTeamId &&
-                                                       ps.MatchId == playerStat.MatchId);
 
-            if (exists)
-            {
-
-                return SimpleResult.Fail("Stats already exist for this player in this match.");
-
-            }
-
-
-            _context.PlayerStats.Add(playerStat);
-
-
-            try
-            {
-
-                await _context.SaveChangesAsync();
-                return SimpleResult.Ok("Player stats created successfully.");
-
-            }
-            catch (DbUpdateException)
-            {
-
-                return SimpleResult.Fail("Unable to create player stats.");
-
-            }
+            return SimpleResult.Ok();
 
         }
 

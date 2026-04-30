@@ -17,6 +17,7 @@ namespace Basketaki.Services
         {
             return await _context.Matches.AsNoTracking().Include(m => m.Court)
                                                         .Include(m => m.League)
+                                                            .ThenInclude(l => l.Season)
                                                         .Include(m => m.HomeTeamSeasonLeague)
                                                             .ThenInclude(tsl => tsl.Team)
                                                         .Include(m => m.AwayTeamSeasonLeague)

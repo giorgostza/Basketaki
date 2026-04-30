@@ -1,11 +1,15 @@
 using Basketaki.Data;
-using Microsoft.EntityFrameworkCore;
 using Basketaki.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -26,8 +30,20 @@ builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<ITeamSeasonLeagueService, TeamSeasonLeagueService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<ITeamStandingService, TeamStandingService>();
+builder.Services.AddScoped<ILookupService, LookupService>();
 
 var app = builder.Build();
+
+
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+
+
 
 
 // Seed database

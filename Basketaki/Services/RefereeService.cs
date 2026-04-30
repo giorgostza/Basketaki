@@ -1,4 +1,5 @@
 ﻿using Basketaki.Data;
+using Basketaki.Helpers;
 using Basketaki.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -59,7 +60,7 @@ namespace Basketaki.Services
             }
 
 
-            var age = CalculateAge(referee.DateOfBirth);
+            var age = DateHelper.CalculateAge(referee.DateOfBirth);
 
             if (age < 18 || age > 60)
             {
@@ -139,7 +140,7 @@ namespace Basketaki.Services
             }
 
 
-            var age = CalculateAge(referee.DateOfBirth);
+            var age = DateHelper.CalculateAge(referee.DateOfBirth);
 
             if (age < 18 || age > 60)
             {
@@ -218,25 +219,6 @@ namespace Basketaki.Services
 
             }
 
-
-        }
-
-
-
-
-        private int CalculateAge(DateOnly birthDate)
-        {
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            var age = today.Year - birthDate.Year;
-
-            if (birthDate > today.AddYears(-age))
-            {
-
-                age--;
-
-            }
-
-            return age;
 
         }
 

@@ -9,14 +9,15 @@ namespace Basketaki.Controllers
     {
         private readonly IMatchRefereeService _matchRefereeService;
         private readonly IMatchService _matchService;
-        private readonly IRefereeService _refereeService;
+        private readonly ILookupService _lookupService;
 
-        public MatchRefereeController(IMatchRefereeService matchRefereeService, IMatchService matchService, IRefereeService refereeService)
+
+        public MatchRefereeController(IMatchRefereeService matchRefereeService, IMatchService matchService, ILookupService lookupService)
         {
 
             _matchRefereeService = matchRefereeService;
             _matchService = matchService;
-            _refereeService = refereeService;
+            _lookupService = lookupService;
 
         }
 
@@ -62,7 +63,7 @@ namespace Basketaki.Controllers
             {
                 MatchId = matchId,
                 MatchDisplayName = $"{match.MatchDate:yyyy-MM-dd} - {match.HomeTeamSeasonLeague?.Team?.Name} vs {match.AwayTeamSeasonLeague?.Team?.Name}",
-                Referees = await GetRefereeSelectListAsync()
+                Referees = await _lookupService.GetRefereeSelectListAsync()
 
             };
 
@@ -89,7 +90,7 @@ namespace Basketaki.Controllers
             if (!ModelState.IsValid)
             {
                 viewModel.MatchDisplayName = $"{match.MatchDate:yyyy-MM-dd} - {match.HomeTeamSeasonLeague?.Team?.Name} vs {match.AwayTeamSeasonLeague?.Team?.Name}";
-                viewModel.Referees = await GetRefereeSelectListAsync(viewModel.RefereeId);
+                viewModel.Referees = await _lookupService.GetRefereeSelectListAsync(viewModel.RefereeId);
                 return View(viewModel);
 
             }
@@ -103,7 +104,7 @@ namespace Basketaki.Controllers
                 ModelState.AddModelError(string.Empty, result.Message ?? "Failed to assign referee.");
 
                 viewModel.MatchDisplayName = $"{match.MatchDate:dd/MM/yyyy} - {match.HomeTeamSeasonLeague?.Team?.Name} vs {match.AwayTeamSeasonLeague?.Team?.Name}";
-                viewModel.Referees = await GetRefereeSelectListAsync(viewModel.RefereeId);
+                viewModel.Referees = await _lookupService.GetRefereeSelectListAsync(viewModel.RefereeId);
 
                 return View(viewModel);
             }
@@ -170,23 +171,6 @@ namespace Basketaki.Controllers
             TempData["SuccessMessage"] = result.Message;
 
             return RedirectToAction(nameof(Index), new { matchId });
-
-        }
-
-
-
-
-        private async Task<List<SelectListItem>> GetRefereeSelectListAsync(int? selectedRefereeId = null)
-        {
-            var referees = await _refereeService.GetAllAsync();
-
-            return referees.Select(r => new SelectListItem
-            {
-                Value = r.Id.ToString(),
-                Text = r.FullName,
-                Selected = selectedRefereeId.HasValue && r.Id == selectedRefereeId.Value
-
-            }).ToList();
 
         }
 

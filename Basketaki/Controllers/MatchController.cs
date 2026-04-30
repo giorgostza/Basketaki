@@ -9,18 +9,13 @@ namespace Basketaki.Controllers
     public class MatchController : Controller
     {
         private readonly IMatchService _matchService;
-        private readonly ICourtService _courtService;
-        private readonly ILeagueService _leagueService;
-        private readonly ITeamSeasonLeagueService _teamSeasonLeagueService;
+        private readonly ILookupService _lookupService;
 
-        public MatchController(IMatchService matchService, ICourtService courtService,
-                               ILeagueService leagueService, ITeamSeasonLeagueService teamSeasonLeagueService)
+        public MatchController(IMatchService matchService, ILookupService lookupService)
         {
 
             _matchService = matchService;
-            _courtService = courtService;
-            _leagueService = leagueService;
-            _teamSeasonLeagueService = teamSeasonLeagueService;
+            _lookupService = lookupService;
 
         }
 
@@ -56,13 +51,10 @@ namespace Basketaki.Controllers
             var viewModel = new MatchFormViewModel
             {
                 MatchDate = DateOnly.FromDateTime(DateTime.Today),
-                Courts = await GetCourtSelectListAsync(),
-                Leagues = await GetLeagueSelectListAsync(),
-                HomeTeams = await GetTeamSeasonLeagueSelectListAsync(),
-                AwayTeams = await GetTeamSeasonLeagueSelectListAsync()
-
+                
             };
 
+            await LoadDropdownsAsync(viewModel);
 
             return View(viewModel);
 
@@ -260,63 +252,15 @@ namespace Basketaki.Controllers
 
 
 
-
-
         private async Task LoadDropdownsAsync(MatchFormViewModel viewModel)
         {
-            viewModel.Courts = await GetCourtSelectListAsync(viewModel.CourtId);
-            viewModel.Leagues = await GetLeagueSelectListAsync(viewModel.LeagueId);
-            viewModel.HomeTeams = await GetTeamSeasonLeagueSelectListAsync(viewModel.HomeTeamSeasonLeagueId);
-            viewModel.AwayTeams = await GetTeamSeasonLeagueSelectListAsync(viewModel.AwayTeamSeasonLeagueId);
-        }
 
-        private async Task<List<SelectListItem>> GetCourtSelectListAsync(int? selectedCourtId = null)
-        {
-            var courts = await _courtService.GetAllAsync();
-
-            return courts.Select(c => new SelectListItem
-            {
-                Value = c.Id.ToString(),
-                Text = $"{c.Name} ({c.Location})",
-                Selected = selectedCourtId.HasValue && c.Id == selectedCourtId.Value
-
-            }).ToList();
+            viewModel.Courts = await _lookupService.GetCourtSelectListAsync(viewModel.CourtId);
+            viewModel.Leagues = await _lookupService.GetLeagueSelectListAsync(viewModel.LeagueId);
+            viewModel.HomeTeams = await _lookupService.GetTeamSeasonLeagueSelectListAsync(viewModel.HomeTeamSeasonLeagueId);
+            viewModel.AwayTeams = await _lookupService.GetTeamSeasonLeagueSelectListAsync(viewModel.AwayTeamSeasonLeagueId);
 
         }
-
-
-
-        private async Task<List<SelectListItem>> GetLeagueSelectListAsync(int? selectedLeagueId = null)
-        {
-            var leagues = await _leagueService.GetAllAsync();
-
-            return leagues.Select(l => new SelectListItem
-            {
-                Value = l.Id.ToString(),
-                Text = $"{l.Name} ({l.Season.Name})",
-                Selected = selectedLeagueId.HasValue && l.Id == selectedLeagueId.Value
-
-            }).ToList();
-
-        }
-
-
-
-
-        private async Task<List<SelectListItem>> GetTeamSeasonLeagueSelectListAsync(int? selectedTeamSeasonLeagueId = null)
-        {
-            var teamSeasonLeagues = await _teamSeasonLeagueService.GetAllAsync();
-
-            return teamSeasonLeagues.Select(tsl => new SelectListItem
-            {
-                Value = tsl.Id.ToString(),
-                Text = $"{tsl.Team.Name} - {tsl.League.Name} ({tsl.League.Season.Name})",
-                Selected = selectedTeamSeasonLeagueId.HasValue && tsl.Id == selectedTeamSeasonLeagueId.Value
-
-            }).ToList();
-
-        }
-
 
 
     }

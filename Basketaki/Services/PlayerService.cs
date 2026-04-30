@@ -1,4 +1,5 @@
 ﻿using Basketaki.Data;
+using Basketaki.Helpers;
 using Basketaki.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -61,7 +62,7 @@ namespace Basketaki.Services
             }
 
 
-            var age = CalculateAge(player.DateOfBirth);
+            var age = DateHelper.CalculateAge(player.DateOfBirth);
 
             if (age < 15 || age > 50)
             {
@@ -140,7 +141,7 @@ namespace Basketaki.Services
             }
 
 
-            var age = CalculateAge(player.DateOfBirth);
+            var age = DateHelper.CalculateAge(player.DateOfBirth);
 
             if (age < 15 || age > 50)
             {
@@ -219,24 +220,6 @@ namespace Basketaki.Services
                 return SimpleResult.Fail("Unable to delete player because it is used by other data.");
 
             }
-
-        }
-
-
-
-        private int CalculateAge(DateOnly birthDate)
-        {
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            var age = today.Year - birthDate.Year;
-
-            if (birthDate > today.AddYears(-age))
-            {
-
-                age--;
-
-            }
-
-            return age;
 
         }
 

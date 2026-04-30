@@ -9,12 +9,12 @@ namespace Basketaki.Controllers
     public class TeamStandingController : Controller
     {
         private readonly ITeamStandingService _teamStandingService;
-        private readonly ITeamSeasonLeagueService _teamSeasonLeagueService;
+        private readonly ILookupService _lookupService;
 
-        public TeamStandingController(ITeamStandingService teamStandingService, ITeamSeasonLeagueService teamSeasonLeagueService)
+        public TeamStandingController(ITeamStandingService teamStandingService, ILookupService lookupService)
         {
             _teamStandingService = teamStandingService;
-            _teamSeasonLeagueService = teamSeasonLeagueService;
+            _lookupService = lookupService;
         }
 
         public async Task<IActionResult> Index()
@@ -227,16 +227,7 @@ namespace Basketaki.Controllers
 
         private async Task LoadTeamSeasonLeaguesAsync(TeamStandingFormViewModel viewModel)
         {
-            var teamSeasonLeagues = await _teamSeasonLeagueService.GetAllAsync();
-
-            viewModel.TeamSeasonLeagues = teamSeasonLeagues.Select(tsl => new SelectListItem
-            {
-                Value = tsl.Id.ToString(),
-                Text = $"{tsl.Team.Name} - {tsl.League.Name} ({tsl.League.City}, {tsl.League.Season.Name})",
-                Selected = tsl.Id == viewModel.TeamSeasonLeagueId
-
-            }).ToList();
-
+            viewModel.TeamSeasonLeagues = await _lookupService.GetTeamSeasonLeagueSelectListAsync(viewModel.TeamSeasonLeagueId);
         }
 
 

@@ -9,14 +9,12 @@ namespace Basketaki.Controllers
     public class TeamSeasonLeagueController : Controller
     {
         private readonly ITeamSeasonLeagueService _teamSeasonLeagueService;
-        private readonly ITeamService _teamService;
-        private readonly ILeagueService _leagueService;
+        private readonly ILookupService _lookupService;
 
-        public TeamSeasonLeagueController(ITeamService teamService, ILeagueService leagueService, ITeamSeasonLeagueService teamSeasonLeagueService)
+        public TeamSeasonLeagueController(ITeamSeasonLeagueService teamSeasonLeagueService, ILookupService lookupService)
         {
             _teamSeasonLeagueService = teamSeasonLeagueService;
-            _teamService = teamService;
-            _leagueService = leagueService;
+            _lookupService = lookupService;
         }
 
         public async Task<IActionResult> Index()
@@ -133,38 +131,10 @@ namespace Basketaki.Controllers
 
         private async Task LoadDropdownsAsync(TeamSeasonLeagueFormViewModel viewModel)
         {
-            viewModel.Teams = await GetTeamSelectListAsync(viewModel.TeamId);
-            viewModel.Leagues = await GetLeagueSelectListAsync(viewModel.LeagueId);
+            viewModel.Teams = await _lookupService.GetTeamSelectListAsync(viewModel.TeamId);
+            viewModel.Leagues = await _lookupService.GetLeagueSelectListAsync(viewModel.LeagueId);
         }
 
-        private async Task<List<SelectListItem>> GetTeamSelectListAsync(int? selectedTeamId = null)
-        {
-            var teams = await _teamService.GetAllAsync();
-
-            return teams.Select(t => new SelectListItem
-            {
-                Value = t.Id.ToString(),
-                Text = $"{t.Name} ({t.City})",
-                Selected = selectedTeamId.HasValue && t.Id == selectedTeamId.Value
-
-            }).ToList();
-
-        }
-
-        private async Task<List<SelectListItem>> GetLeagueSelectListAsync(int? selectedLeagueId = null)
-        {
-            var leagues = await _leagueService.GetAllAsync();
-
-            return leagues.Select(l => new SelectListItem
-            {
-                Value = l.Id.ToString(),
-                Text = $"{l.Name} - {l.City} ({l.Season.Name})",
-                Selected = selectedLeagueId.HasValue && l.Id == selectedLeagueId.Value
-
-            }).ToList();
-
-        }
-
-
+       
     }
 }

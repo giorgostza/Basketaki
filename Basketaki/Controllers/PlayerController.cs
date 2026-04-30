@@ -1,4 +1,5 @@
 ﻿using Basketaki.Constants;
+using Basketaki.Helpers;
 using Basketaki.Models;
 using Basketaki.Services;
 using Basketaki.ViewModels;
@@ -241,13 +242,8 @@ namespace Basketaki.Controllers
 
         private List<SelectListItem> GetPositionSelectList(PlayerPosition? selectedPosition = null)
         {
-            return Enum.GetValues(typeof(PlayerPosition)).Cast<PlayerPosition>().Select(position => new SelectListItem
-            {
-                    Value = position.ToString(),
-                    Text = position.ToString(),
-                    Selected = selectedPosition.HasValue && position == selectedPosition.Value
 
-            }).ToList();
+            return EnumHelper.ToSelectList(selectedPosition);
 
         }
 

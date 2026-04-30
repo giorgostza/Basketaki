@@ -10,13 +10,13 @@ namespace Basketaki.Controllers
     {
         private readonly IPlayerStatService _playerStatService;
         private readonly IMatchService _matchService;
-        private readonly IPlayerSeasonTeamService _playerSeasonTeamService;
+        private readonly ILookupService _lookupService;
 
-        public PlayerStatController(IPlayerStatService playerStatService, IMatchService matchService, IPlayerSeasonTeamService playerSeasonTeamService)
+        public PlayerStatController(IPlayerStatService playerStatService, IMatchService matchService, ILookupService lookupService)
         {
             _playerStatService = playerStatService;
             _matchService = matchService;
-            _playerSeasonTeamService = playerSeasonTeamService;
+            _lookupService = lookupService;
         }
 
         public async Task<IActionResult> Index(int? matchId)
@@ -286,37 +286,10 @@ namespace Basketaki.Controllers
 
         private async Task LoadDropdownsAsync(PlayerStatFormViewModel viewModel)
         {
-            viewModel.Matches = await GetMatchSelectListAsync(viewModel.MatchId);
-            viewModel.PlayerSeasonTeams = await GetPlayerSeasonTeamSelectListAsync(viewModel.PlayerSeasonTeamId);
 
-        }
+            viewModel.Matches = await _lookupService.GetMatchSelectListAsync(viewModel.MatchId);
+            viewModel.PlayerSeasonTeams = await _lookupService.GetPlayerSeasonTeamSelectListAsync(viewModel.PlayerSeasonTeamId);
 
-
-        private async Task<List<SelectListItem>> GetMatchSelectListAsync(int? selectedMatchId = null)
-        {
-            var matches = await _matchService.GetAllAsync();
-
-            return matches.Select(m => new SelectListItem
-            {
-                Value = m.Id.ToString(),
-                Text = $"{m.MatchDate:dd/MM/yyyy} - {m.HomeTeamSeasonLeague?.Team?.Name} vs {m.AwayTeamSeasonLeague?.Team?.Name}",
-                Selected = selectedMatchId.HasValue && m.Id == selectedMatchId.Value
-
-            }).ToList();
-
-        }
-
-        private async Task<List<SelectListItem>> GetPlayerSeasonTeamSelectListAsync(int? selectedPlayerSeasonTeamId = null)
-        {
-            var playerSeasonTeams = await _playerSeasonTeamService.GetAllAsync();
-
-            return playerSeasonTeams.Select(pst => new SelectListItem
-            {
-                Value = pst.Id.ToString(),
-                Text = $"{pst.Player.FullName} - {pst.Team.Name} #{pst.JerseyNumber} ({pst.Season.Name})",
-                Selected = selectedPlayerSeasonTeamId.HasValue && pst.Id == selectedPlayerSeasonTeamId.Value
-
-            }).ToList();
 
         }
 

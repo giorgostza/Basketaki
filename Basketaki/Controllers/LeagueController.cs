@@ -2,19 +2,19 @@
 using Basketaki.Services;
 using Basketaki.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+
 
 namespace Basketaki.Controllers
 {
     public class LeagueController : Controller
     {
         private readonly ILeagueService _leagueService;
-        private readonly ISeasonService _seasonService;
+        private readonly ILookupService _lookupService;
 
-        public LeagueController(ILeagueService leagueService, ISeasonService seasonService)
+        public LeagueController(ILeagueService leagueService, ILookupService lookupService)
         {
             _leagueService = leagueService;
-            _seasonService = seasonService;
+            _lookupService = lookupService;
         }
 
         public async Task<IActionResult> Index()
@@ -48,7 +48,7 @@ namespace Basketaki.Controllers
             var viewModel = new LeagueFormViewModel
             {
 
-                Seasons = await GetSeasonSelectListAsync()
+                Seasons = await _lookupService.GetSeasonSelectListAsync()
 
             };
 
@@ -65,7 +65,7 @@ namespace Basketaki.Controllers
             if (!ModelState.IsValid)
             {
 
-                viewModel.Seasons = await GetSeasonSelectListAsync(viewModel.SeasonId);
+                viewModel.Seasons = await _lookupService.GetSeasonSelectListAsync(viewModel.SeasonId);
 
                 return View(viewModel);
             }
@@ -85,7 +85,7 @@ namespace Basketaki.Controllers
             {
                 ModelState.AddModelError(string.Empty, result.Message ?? "Failed to create league.");
 
-                viewModel.Seasons = await GetSeasonSelectListAsync(viewModel.SeasonId);
+                viewModel.Seasons = await _lookupService.GetSeasonSelectListAsync(viewModel.SeasonId);
 
                 return View(viewModel);
             }
@@ -120,7 +120,7 @@ namespace Basketaki.Controllers
                 Name = league.Name,
                 City = league.City,
                 SeasonId = league.SeasonId,
-                Seasons = await GetSeasonSelectListAsync(league.SeasonId)
+                Seasons = await _lookupService.GetSeasonSelectListAsync(league.SeasonId)
             };
 
 
@@ -145,7 +145,7 @@ namespace Basketaki.Controllers
             if (!ModelState.IsValid)
             {
 
-                viewModel.Seasons = await GetSeasonSelectListAsync(viewModel.SeasonId);
+                viewModel.Seasons = await _lookupService.GetSeasonSelectListAsync(viewModel.SeasonId);
 
                 return View(viewModel);
             }
@@ -165,7 +165,7 @@ namespace Basketaki.Controllers
             {
                 ModelState.AddModelError(string.Empty, result.Message ?? "Failed to update league.");
 
-                viewModel.Seasons = await GetSeasonSelectListAsync(viewModel.SeasonId);
+                viewModel.Seasons = await _lookupService.GetSeasonSelectListAsync(viewModel.SeasonId);
 
                 return View(viewModel);
             }
@@ -216,23 +216,6 @@ namespace Basketaki.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
-
-
-        private async Task<List<SelectListItem>> GetSeasonSelectListAsync(int? selectedSeasonId = null)
-        {
-            var seasons = await _seasonService.GetAllAsync();
-
-            return seasons.Select(s => new SelectListItem
-            {
-                Value = s.Id.ToString(),
-                Text = s.Name,
-                Selected = selectedSeasonId.HasValue && s.Id == selectedSeasonId.Value
-
-            }).ToList();
-
-
-        }
 
     }
 }

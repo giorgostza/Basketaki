@@ -9,17 +9,12 @@ namespace Basketaki.Controllers
     public class PlayerSeasonTeamController : Controller
     {
         private readonly IPlayerSeasonTeamService _playerSeasonTeamService;
-        private readonly IPlayerService _playerService;
-        private readonly ITeamService _teamService;
-        private readonly ISeasonService _seasonService;
+        private readonly ILookupService _lookupService;
 
-        public PlayerSeasonTeamController(IPlayerSeasonTeamService playerSeasonTeamService, IPlayerService playerService,
-                                          ITeamService teamService, ISeasonService seasonService)
+        public PlayerSeasonTeamController(IPlayerSeasonTeamService playerSeasonTeamService, ILookupService lookupService)
         {
             _playerSeasonTeamService = playerSeasonTeamService;
-            _playerService = playerService;
-            _teamService = teamService;
-            _seasonService = seasonService;
+            _lookupService = lookupService;
         }
 
         public async Task<IActionResult> Index()
@@ -236,56 +231,14 @@ namespace Basketaki.Controllers
 
         private async Task LoadDropdownsAsync(PlayerSeasonTeamFormViewModel viewModel)
         {
-            viewModel.Players = await GetPlayerSelectListAsync(viewModel.PlayerId);
-            viewModel.Teams = await GetTeamSelectListAsync(viewModel.TeamId);
-            viewModel.Seasons = await GetSeasonSelectListAsync(viewModel.SeasonId);
-        }
 
-        private async Task<List<SelectListItem>> GetPlayerSelectListAsync(int? selectedPlayerId = null)
-        {
-            var players = await _playerService.GetAllAsync();
-
-            return players.Select(p => new SelectListItem
-            {
-                Value = p.Id.ToString(),
-                Text = p.FullName,
-                Selected = selectedPlayerId.HasValue && p.Id == selectedPlayerId.Value
-
-            }).ToList();
+            viewModel.Players = await _lookupService.GetPlayerSelectListAsync(viewModel.PlayerId);
+            viewModel.Teams = await _lookupService.GetTeamSelectListAsync(viewModel.TeamId);
+            viewModel.Seasons = await _lookupService.GetSeasonSelectListAsync(viewModel.SeasonId);
 
         }
 
-
-        private async Task<List<SelectListItem>> GetTeamSelectListAsync(int? selectedTeamId = null)
-        {
-            var teams = await _teamService.GetAllAsync();
-
-            return teams.Select(t => new SelectListItem
-            {
-                Value = t.Id.ToString(),
-                Text = $"{t.Name} ({t.City})",
-                Selected = selectedTeamId.HasValue && t.Id == selectedTeamId.Value
-
-            }).ToList();
-
-        }
-
-
-
-        private async Task<List<SelectListItem>> GetSeasonSelectListAsync(int? selectedSeasonId = null)
-        {
-            var seasons = await _seasonService.GetAllAsync();
-
-            return seasons.Select(s => new SelectListItem
-            {
-                Value = s.Id.ToString(),
-                Text = s.Name,
-                Selected = selectedSeasonId.HasValue && s.Id == selectedSeasonId.Value
-
-            }).ToList();
-
-        }
-
+        
 
     }
 }

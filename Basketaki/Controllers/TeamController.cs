@@ -2,19 +2,19 @@
 using Basketaki.Services;
 using Basketaki.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+
 
 namespace Basketaki.Controllers
 {
     public class TeamController : Controller
     {
         private readonly ITeamService _teamService;
-        private readonly ICoachService _coachService;
+        private readonly ILookupService _lookupService;
 
-        public TeamController(ITeamService teamService, ICoachService coachService)
+        public TeamController(ITeamService teamService, ILookupService lookupService)
         {
             _teamService = teamService;
-            _coachService = coachService;
+            _lookupService = lookupService;
         }
 
         public async Task<IActionResult> Index()
@@ -46,7 +46,7 @@ namespace Basketaki.Controllers
             var viewModel = new TeamFormViewModel
             {
 
-                Coaches = await GetCoachSelectListAsync()
+                Coaches = await _lookupService.GetCoachSelectListAsync()
 
             };
 
@@ -62,7 +62,7 @@ namespace Basketaki.Controllers
         {
             if (!ModelState.IsValid)
             {
-                viewModel.Coaches = await GetCoachSelectListAsync(viewModel.CoachId);
+                viewModel.Coaches = await _lookupService.GetCoachSelectListAsync(viewModel.CoachId);
 
                 return View(viewModel);
             }
@@ -81,7 +81,7 @@ namespace Basketaki.Controllers
             if (!result.Success)
             {
                 ModelState.AddModelError(string.Empty, result.Message ?? "Failed to create team.");
-                viewModel.Coaches = await GetCoachSelectListAsync(viewModel.CoachId);
+                viewModel.Coaches = await _lookupService.GetCoachSelectListAsync(viewModel.CoachId);
 
                 return View(viewModel);
             }
@@ -113,7 +113,7 @@ namespace Basketaki.Controllers
                 City = team.City,
                 PhotoUrl = team.PhotoUrl,
                 CoachId = team.CoachId,
-                Coaches = await GetCoachSelectListAsync(team.CoachId)
+                Coaches = await _lookupService.GetCoachSelectListAsync(team.CoachId)
             };
 
 
@@ -136,7 +136,7 @@ namespace Basketaki.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Coaches = await GetCoachSelectListAsync(viewModel.CoachId);
+                viewModel.Coaches = await _lookupService.GetCoachSelectListAsync(viewModel.CoachId);
 
                 return View(viewModel);
             }
@@ -157,7 +157,7 @@ namespace Basketaki.Controllers
             if (!result.Success)
             {
                 ModelState.AddModelError(string.Empty, result.Message ?? "Failed to update team.");
-                viewModel.Coaches = await GetCoachSelectListAsync(viewModel.CoachId);
+                viewModel.Coaches = await _lookupService.GetCoachSelectListAsync(viewModel.CoachId);
 
                 return View(viewModel);
             }
@@ -205,37 +205,6 @@ namespace Basketaki.Controllers
             TempData["SuccessMessage"] = result.Message;
 
             return RedirectToAction(nameof(Index));
-        }
-
-
-
-
-
-        private async Task<List<SelectListItem>> GetCoachSelectListAsync(int? selectedCoachId = null)
-        {
-            var coaches = await _coachService.GetAllAsync();
-
-            var items = new List<SelectListItem>
-            {
-                new SelectListItem
-                {
-                    Value = "",
-                    Text = "-- No Coach --",
-                    Selected = !selectedCoachId.HasValue
-                }
-
-            };
-
-            items.AddRange(coaches.Select(c => new SelectListItem
-            {
-                Value = c.Id.ToString(),
-                Text = c.FullName,
-                Selected = selectedCoachId.HasValue && c.Id == selectedCoachId.Value
-
-            }));
-
-            return items;
-
         }
 
 

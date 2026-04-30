@@ -9,12 +9,12 @@ namespace Basketaki.Controllers
     public class MatchPhotoController : Controller
     {
         private readonly IMatchPhotoService _matchPhotoService;
-        private readonly IMatchService _matchService;
+        private readonly ILookupService _lookupService;
 
-        public MatchPhotoController(IMatchPhotoService matchPhotoService, IMatchService matchService)
+        public MatchPhotoController(IMatchPhotoService matchPhotoService, ILookupService lookupService)
         {
             _matchPhotoService = matchPhotoService;
-            _matchService = matchService;
+            _lookupService = lookupService;
         }
 
         public async Task<IActionResult> Index(int? matchId)
@@ -58,7 +58,7 @@ namespace Basketaki.Controllers
             var viewModel = new MatchPhotoFormViewModel
             {
                 MatchId = matchId ?? 0,
-                Matches = await GetMatchSelectListAsync(matchId)
+                Matches = await _lookupService.GetMatchSelectListAsync(matchId)
 
             };
 
@@ -74,7 +74,7 @@ namespace Basketaki.Controllers
         {
             if (!ModelState.IsValid)
             {
-                viewModel.Matches = await GetMatchSelectListAsync(viewModel.MatchId);
+                viewModel.Matches = await _lookupService.GetMatchSelectListAsync(viewModel.MatchId);
 
                 return View(viewModel);
             }
@@ -94,7 +94,7 @@ namespace Basketaki.Controllers
             {
                 ModelState.AddModelError(string.Empty, result.Message ?? "Failed to create photo.");
 
-                viewModel.Matches = await GetMatchSelectListAsync(viewModel.MatchId);
+                viewModel.Matches = await _lookupService.GetMatchSelectListAsync(viewModel.MatchId);
 
                 return View(viewModel);
             }
@@ -158,24 +158,6 @@ namespace Basketaki.Controllers
 
             return RedirectToAction(nameof(Index), new { matchId });
         }
-
-
-
-
-        private async Task<List<SelectListItem>> GetMatchSelectListAsync(int? selectedMatchId = null)
-        {
-            var matches = await _matchService.GetAllAsync();
-
-            return matches.Select(m => new SelectListItem
-            {
-                Value = m.Id.ToString(),
-                Text = $"{m.MatchDate:dd/MM/yyyy} - {m.HomeTeamSeasonLeague?.Team?.Name} vs {m.AwayTeamSeasonLeague?.Team?.Name}",
-                Selected = selectedMatchId.HasValue && m.Id == selectedMatchId.Value
-
-            }).ToList();
-
-        }
-
 
 
     }
